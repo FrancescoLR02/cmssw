@@ -1071,12 +1071,19 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(L1MuKBMTrack& track){
 
   double deltaR = stationRadii[maxStation] - stationRadii[minStation];
   
-  //TODO double pathLength = deltaR * std::cosh(track.eta());
+  //TODO CHECK IF IT IS CORRECT!
+  double pathLength = deltaR * std::cosh(track.eta());
 
-  double beta = deltaR / (c * spreadTime);
+  //double beta = deltaR / (c * spreadTime);
+  double beta = pathLength / (c * spreadTime);
 
   if (beta > 1.0) return 1.0;
   if (beta < 0.2) return 0.2;
+
+  if (spreadBX > 0) {
+    printf("SLOW TRACK: minSt=%d bx=%d, maxSt=%d bx=%d, spreadBX=%d, beta=%.3f, eta=%.3f\n",
+         minStation, bxAtMinStation, maxStation, bxAtMaxStation, spreadBX, beta, track.eta());
+  }
 
   return beta;
 }
