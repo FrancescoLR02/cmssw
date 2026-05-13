@@ -56,6 +56,9 @@ float L1MuKBMTrack::met_bx0() const { return met_bx0_; }
 
 int L1MuKBMTrack::hitPattern() const { return hitPattern_; }
 
+double L1MuKBMTrack::eLoss() const {return eLoss_; }
+float L1MuKBMTrack::beta() const {return beta_; }
+
 int L1MuKBMTrack::step() const { return step_; }
 int L1MuKBMTrack::sector() const { return sector_; }
 int L1MuKBMTrack::wheel() const { return wheel_; }
@@ -112,7 +115,8 @@ void L1MuKBMTrack::setMetBxm2(float met2) { met_bxm2_ = met2; }
 void L1MuKBMTrack::setMetBxm1(float met1) { met_bxm1_ = met1; }
 void L1MuKBMTrack::setMetBx0(float met0) { met_bx0_ = met0; }
 
-void L1MuKBMTrack::seteLoss(float eLoss) {eLoss_ = eLoss; }
+void L1MuKBMTrack::seteLoss(double eLoss) {eLoss_ = eLoss; }
+void L1MuKBMTrack::setBeta(float beta) {beta_ = beta ;}
 
 void L1MuKBMTrack::setPtEtaPhi(double pt, double eta, double phi) {
   PolarLorentzVector v(pt, eta, phi, 0.105);

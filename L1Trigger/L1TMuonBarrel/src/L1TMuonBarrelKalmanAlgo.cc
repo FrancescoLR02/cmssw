@@ -824,8 +824,9 @@ void L1TMuonBarrelKalmanAlgo::setFloatingPointValues(L1MuKBMTrack& track, bool v
 
 std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombinedStubRef& seed,
                                                              const L1MuKBMTCombinedStubRefVector& stubs,
-                                                             const int bx, 
-                                                            const double dyn_eLoss){
+                                                            int bx, 
+                                                            double dyn_eLoss, 
+                                                            float beta ){
 
   L1MuKBMTrackCollection pretracks;
   std::vector<int> combinatorics;
@@ -854,6 +855,9 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
   seedQual = seed->quality();
   for (const auto& mask : combinatorics) {
     L1MuKBMTrack track(seed, correctedPhi(seed, seed->scNum()), correctedPhiB(seed));
+
+    track.setBeta(beta);
+    track.seteLoss(dyn_eLoss);
     double phiB = correctedPhiB(seed);
     int charge;
     if (phiB == 0)
@@ -880,7 +884,6 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
       track.setCoordinates(seed->stNum(), 0, correctedPhi(seed, seed->scNum()), 0);
     }
 
-    track.seteLoss(dyn_eLoss);
     track.setHitPattern(hitPattern(track));
     //set covariance
     L1MuKBMTrack::CovarianceMatrix covariance;
@@ -1082,26 +1085,30 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(L1MuKBMTrack& track){
 
 std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef &seed,
                                                                       const L1MuKBMTCombinedStubRefVector& stubs,
-                                                                      const int bx){
+                                                                      int bx){
 
     //Start with a first pass chain
-    double starting_eLoss = eLoss_[seed->stNum() - 1];
-    std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss);
+    double starting_eLoss = eLoss_[0];
+    float beta = 1.0;
+    std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
 
     if (!firstChain.first){
       return firstChain;
     }
 
     //Define the beta values for given BX spread hypothesis
-    double beta = BetaEstimation(firstChain.second);
+    beta = BetaEstimation(firstChain.second);
+    
+    double eLossTrueValue;
 
     //Define new eLoss term proportional to the original value scaled by 1/beta^2
-    double eLossTrueValue = 1.0 / (beta*beta) * starting_eLoss;
+    if(beta != 1.0) eLossTrueValue = 1.0 / (beta*beta) * starting_eLoss;
+    else eLossTrueValue = starting_eLoss;
 
-    std::cout << beta << " " << eLossTrueValue << std::endl;
+    //printf("Beta value %f, estimated eLoss %f\n", beta, eLossTrueValue);
 
     //run again the chain with the new eLoss hypostesis
-    std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue);
+    std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
 
     //output the pari of tracks
     return secondChain;

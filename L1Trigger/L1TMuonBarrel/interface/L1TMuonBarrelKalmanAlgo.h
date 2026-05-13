@@ -24,8 +24,8 @@ public:
   typedef ROOT::Math::SMatrix<double, 3, 3> Matrix33;
 
   L1TMuonBarrelKalmanAlgo(const edm::ParameterSet& settings);
-  std::pair<bool, L1MuKBMTrack> chain(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, const int, const double);
-  std::pair<bool, L1MuKBMTrack> IterativeChain(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, const int);
+  std::pair<bool, L1MuKBMTrack> chain(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, int, double, float);
+  std::pair<bool, L1MuKBMTrack> IterativeChain(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, int);
 
 
   L1MuKBMTrackCollection clean(const L1MuKBMTrackCollection&, uint);
@@ -35,7 +35,7 @@ public:
 
 private:
   bool verbose_;
-  double L1TMuonBarrelKalmanAlgo::BetaEstimation(L1MuKBMTrack&);
+  double BetaEstimation(L1MuKBMTrack&);
   std::pair<bool, uint> match(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, int);
   int correctedPhi(const L1MuKBMTCombinedStubRef&, int);
   double correctedPhiB(const L1MuKBMTCombinedStubRef&);

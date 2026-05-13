@@ -57,8 +57,8 @@ public:
   float met_bx0() const;
 
 
-  float eLoss() const;
-
+  double eLoss() const;
+  float beta() const;
   //Approximate Chi2 metric
   int hitPattern() const;
   //step;
@@ -140,7 +140,8 @@ public:
   void setMetBxm1(float);
   void setMetBx0(float);
 
-  void seteLoss(float);
+  void seteLoss(double);
+  void setBeta(float);
 
   //Set floating point coordinates for studies
   void setPtEtaPhi(double, double, double);
@@ -202,7 +203,8 @@ private:
   float met_bxm1_ = 0;
   float met_bx0_ = 0;
 
-  float eLoss_ = 0.0;
+  double eLoss_ = 0.0;
+  float beta_ = 1.0;
 
   //phi bitmask
   int hitPattern_ = 0;

@@ -155,6 +155,8 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   std::vector<int16_t> hitPattern(out->size()); 
   std::vector<double> VarianceK(out->size());
   std::vector<double> VariancePhiB(out->size());
+  std::vector<double> eLoss(out->size());
+  std::vector<float> beta(out->size());
 
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
@@ -194,6 +196,8 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
     hitPattern[i] = track.hitPattern();
     VarianceK[i] = track.covariance()[0];
     VariancePhiB[i] = track.covariance()[8];
+    eLoss[i] = track.eLoss();
+    beta[i] = track.beta();
 
     int ptRedInWidth = m_BPhiExtrapolation_->getPtRedInWidth();
     int ptMask = (1 << ptRedInWidth) - 1;
@@ -269,6 +273,8 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   out->addColumn<int16_t>("chi2", chi2, "Chi squared value (integer)");
   out->addColumn<int16_t>("Hit_pattern", hitPattern, "Hit Pattern");
   out->addColumn<double>("K Variance", VarianceK, "K Variance");
+  out->addColumn<double>("energy loss", eLoss, "eLoss");
+  out->addColumn<float>("beta", beta, "bets");
   //out->addColumn<double>("PhiB Variance", VariancePhiB, "PhiB Variance");
 
   if (addStubs_) {
