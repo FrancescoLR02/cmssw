@@ -162,6 +162,8 @@ L1TMuonBarrelKalmanSectorProcessor::bmtf_out L1TMuonBarrelKalmanSectorProcessor:
   return out;
 }
 
+
+
 void L1TMuonBarrelKalmanSectorProcessor::verbose(L1TMuonBarrelKalmanAlgo* algo, const L1MuKBMTrackCollection& tracks) {
   L1TMuonBarrelKalmanSectorProcessor::bmtf_out out = makeWord(algo, tracks);
   std::cout << "O " << sector_ << " " << out.pt_1 << " " << out.qual_1 << " " << out.eta_1 << " " << out.HF_1 << " "

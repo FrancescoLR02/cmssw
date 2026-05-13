@@ -1,11 +1,15 @@
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
-from Configuration.Eras.Modifier_run3_2024_L1T_cff import run3_2024_L1T
+#from Configuration.Eras.Modifier_run3_2024_L1T_cff import run3_2024_L1T
 import math
+
+#test - Francesco
+run3_2024_L1T = cms.Modifier()
 
 options = VarParsing.VarParsing ('analysis')
 
-#selbx = "DoubleMuPt0Qual8" #FIXME
+#selbx = "Stubs3BxWindowWheelCond"
+#selbx = "DoubleMuPt0Qual8"
 selbx = ""
 
 options.parseArguments()
@@ -14,7 +18,7 @@ process = cms.Process( "DUMP", run3_2024_L1T )
 
 
 process.maxEvents = cms.untracked.PSet(
-  input = cms.untracked.int32(-1) #FIXME was -1
+  input = cms.untracked.int32(10_000) #FIXME was -1
 )
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
@@ -26,8 +30,6 @@ process.load('L1Trigger.L1TMuon.fakeGmtParams_cff')
 process.source = cms.Source("PoolSource",
   fileNames = cms.untracked.vstring(options.inputFiles)
 )
-
-
 
 
 bmtfKalmanTrackingSettings = cms.PSet(
@@ -52,7 +54,6 @@ bmtfKalmanTrackingSettings = cms.PSet(
   chiSquareCutPattern = cms.vint32(7,11,13,14,15),
   chiSquareCutCurvMax = cms.vint32(2500,2500,2500,2500,2500),
   chiSquareCut = cms.vint32(126,126,126,126,126),
-
 
   #vertex cuts
   trackComp = cms.vdouble(1.75,1.25,0.625,0.250),
@@ -80,6 +81,8 @@ bmtfKalmanTrackingSettings = cms.PSet(
 
   useNewQualityCalculation = cms.bool(False),
 )
+
+
 
 bmtfKalmanTrackingOfflineSettings = cms.PSet(
   verbose = cms.bool(False),  #
@@ -142,7 +145,7 @@ run3_2024_L1T.toModify(
 )
 
 process.kbmtfConvert = cms.EDProducer("convertToL1MuKBMTCombinedStub",
-  src = cms.InputTag("FinalBxSelectorBMTFStub" if selbx else "l1ScBMTFUnpacker", "BMTFStub", "SCHLP"),
+  src = cms.InputTag("FinalBxSelectorBMTFStub", "BMTFStub"),
   bxMin = cms.int32(1),
   bxMax = cms.int32(3564),
   cotTheta_1 = cms.vint32(105,101,97,93,88,84,79,69,64,58,52,46,40,34,21,14,7,0,-7,-14,-21,-34,-40,-46,-52,-58,-64,-69,-79,-84,-88,-93,-97,-101,-105),
@@ -152,7 +155,7 @@ process.kbmtfConvert = cms.EDProducer("convertToL1MuKBMTCombinedStub",
 )
 
 process.skimMuons = cms.EDProducer("SkimmerScoutingMuonCollection",
-  gmtSrc = cms.InputTag("FinalBxSelectorMuon" if selbx else "l1ScGmtUnpacker", "Muon"),
+  gmtSrc = cms.InputTag("FinalBxSelectorMuon", "Muon"),
   ptmin = cms.double(14.0),
   etamax = cms.double(0.9),
 )
@@ -175,62 +178,8 @@ process.kbmtfEmulation = cms.EDProducer("L1TMuonBarrelScoutingKalmanTrackProduce
       )
     )
   ),
-  gmtSrc = cms.InputTag("FinalBxSelectorMuon" if selbx else "l1ScGmtUnpacker", "Muon"),
-  metSrc = cms.InputTag("l1ScCaloUnpacker", "EtSum"),
-  matchGmt = cms.bool(False),
-  drCut = cms.double(0.1),
-  phiMult = cms.double(576./(2*math.pi)),
-  etaMult = cms.double(1./0.010875),
-  debug = cms.bool(False)
-)
-
-process.kbmtfEmulationSameBx = cms.EDProducer("L1TMuonBarrelScoutingKalmanTrackProducer",
-  src = cms.InputTag("kbmtfConvert"),
-  #bxspread = cms.int32(0),
-  bxL = cms.int32(1),
-  bxH = cms.int32(7),
-  algoSettings = bmtfKalmanTrackingSettings,
-  trackFinderSettings = cms.PSet(
-    sectorsToProcess = cms.vint32(0,1,2,3,4,5,6,7,8,9,10,11),
-    verbose = cms.int32(0),
-    sectorSettings = cms.PSet(
-      # verbose = cms.int32(1),
-      verbose = cms.int32(0),
-      wheelsToProcess = cms.vint32(-2,-1,0,1,2),
-      regionSettings = cms.PSet(
-        verbose=cms.int32(0)
-      )
-    )
-  ),
-  gmtSrc = cms.InputTag("FinalBxSelectorMuon" if selbx else "l1ScGmtUnpacker", "Muon"),
-  metSrc = cms.InputTag("l1ScCaloUnpacker", "EtSum"),
-  matchGmt = cms.bool(False),
-  drCut = cms.double(0.1),
-  phiMult = cms.double(576./(2*math.pi)),
-  etaMult = cms.double(1./0.010875),
-  debug = cms.bool(False)
-)
-
-process.kbmtfOfflineEmulation = cms.EDProducer("L1TMuonBarrelScoutingKalmanTrackProducer",
-  src = cms.InputTag("kbmtfConvert"),
-  algoSettings = bmtfKalmanTrackingOfflineSettings,
-  trackFinderSettings = cms.PSet(
-    sectorsToProcess = cms.vint32(0,1,2,3,4,5,6,7,8,9,10,11),
-    verbose = cms.int32(0),
-    sectorSettings = cms.PSet(
-      # verbose = cms.int32(1),
-      verbose = cms.int32(0),
-      wheelsToProcess = cms.vint32(-2,-1,0,1,2),
-      regionSettings = cms.PSet(
-        verbose=cms.int32(0)
-      )
-    )
-  ),
-  #bxspread = cms.int32(10),
-  bxL = cms.int32(1),
-  bxH = cms.int32(7),
-  gmtSrc = cms.InputTag("FinalBxSelectorMuon" if selbx else "l1ScGmtUnpacker", "Muon"),
-  metSrc = cms.InputTag("l1ScCaloUnpacker", "EtSum"),
+  gmtSrc = cms.InputTag("FinalBxSelectorMuon", "Muon"),
+  metSrc = cms.InputTag("FinalBxSelectorBxSums", "EtSum"),
   matchGmt = cms.bool(False),
   drCut = cms.double(0.1),
   phiMult = cms.double(576./(2*math.pi)),
@@ -246,41 +195,12 @@ process.skimKbmtf = cms.EDProducer("SkimmerScoutingKBMTFCollection",
   etamax = cms.double(0.9),
 )
 
-#process.skimKbmtfSameBx = cms.EDProducer("SkimmerScoutingKBMTFCollection",
-#  src = cms.InputTag("kbmtfEmulationSameBx", "L1MuKBMTrack"),
-#  algoSettings = bmtfKalmanTrackingSettings,
-#  ptmin = cms.double(8.0),
-#  etamax = cms.double(0.9),
-#)
-
-
-
-process.scMuonTable = cms.EDProducer("ConvertScoutingMuonsToOrbitFlatTable",
-  src = cms.InputTag("FinalBxSelectorMuon" if selbx else "l1ScGmtUnpacker", "Muon"),
-  name = cms.string("L1Mu"),
-  minpt = cms.double(14.0),
-  doc = cms.string("Muons from GMT"),
-)
 
 process.scSkimmedMuonTable = cms.EDProducer("ConvertScoutingMuonsToOrbitFlatTable",
   src = cms.InputTag("skimMuons", "L1MuonSkimmed"),
   name = cms.string("SkimmedL1Mu"),
   minpt = cms.double(14.0),
   doc = cms.string("Skimmed Muons from GMT"),
-)
-
-process.scKbmtfTable = cms.EDProducer("ConverterScoutingKbmtfTracksToOrbitFlatTable",
-  src = cms.InputTag("kbmtfEmulation", "L1MuKBMTrack"),
-  name = cms.string("L1KBMTF"),
-  doc = cms.string("Re-emulated KBMTF muons"),
-  algoSettings = bmtfKalmanTrackingSettings,
-  addStubs = cms.bool(True)
-)
-
-process.scStubsTable = cms.EDProducer("ConvertScoutingStubsToOrbitFlatTable",
-  src = cms.InputTag("l1ScBMTFUnpacker", "BMTFStub", "SCHLP"),
-  name = cms.string("L1Stubs"),
-  doc = cms.string("Stubs"),
 )
 
 
@@ -292,65 +212,21 @@ process.scSkimmedKbmtfTable = cms.EDProducer("ConverterScoutingKbmtfTracksToOrbi
   addStubs = cms.bool(True)
 )
 
-#process.scSkimmedKbmtfSameBxTable = cms.EDProducer("ConverterScoutingKbmtfTracksToOrbitFlatTable",
-#  src = cms.InputTag("skimKbmtfSameBx", "L1MuKBMTrackSkimmed"),
-#  name = cms.string("L1KBMTFSkimmedSameBx"),
-#  doc = cms.string("Re-emulated KBMTF muons in same BX skimmed"),
-#  algoSettings = bmtfKalmanTrackingSettings,
-#  addStubs = cms.bool(True)
-#)
-
-process.scKbmtfOfflineTable = cms.EDProducer("ConverterScoutingKbmtfTracksToOrbitFlatTable",
-  src = cms.InputTag("kbmtfOfflineEmulation", "L1MuKBMTrack"),
-  name = cms.string("L1KBMTFOff"),
-  doc = cms.string("Re-emulated KBMTF muons with offline propagation"),
-  algoSettings = bmtfKalmanTrackingOfflineSettings,
-  addStubs = cms.bool(True)
-)
-
 process.trackFilter = cms.EDFilter("TrackFilter",
-     muons       = cms.InputTag("kbmtfEmulation", "L1MuKBMTrack"),
+    muons       = cms.InputTag("kbmtfEmulation", "L1MuKBMTrack"),
 )
 
 process.nanoAOD_selection = cms.Sequence(process.trackFilter)
 
 process.p = cms.Path(
-  #process.nanoAOD_selection + 
-  #process.scMuonTable +
-  # process.scKbmtfTable
-  #process.scJetTable +
-  #process.scEgammaTable +
-  #process.scTauTable +
-  # process.scStubsTable +
   process.skimMuons + 
   process.kbmtfConvert +
   process.kbmtfEmulation +
-  #process.kbmtfEmulationSameBx +
-  #process.kbmtfOfflineEmulation +
   process.skimKbmtf +
-  #process.skimKbmtfSameBx +
   process.nanoAOD_selection +
-  #process.scMuonTable +
   process.scSkimmedMuonTable +
-  #process.scKbmtfTable +
-  process.scSkimmedKbmtfTable #+ 
-  #process.scSkimmedKbmtfSameBxTable #+
-  #process.scStubsTable
-  #process.scKbmtfOfflineTable
-  #process.scSumTable
+  process.scSkimmedKbmtfTable
 )
-
-# process.p.replace(process.scKbmtfTable, process.kbmtfConvert + process.kbmtfEmulation + process.scKbmtfTable)
-
-#process.out = cms.OutputModule("PoolOutputModule",
-#  fileName = cms.untracked.string(options.outputFile),
-#  outputCommands = cms.untracked.vstring(
-#    "keep *",
-#    # "keep *_CaloUnpacker_*_*",
-#    # "keep *_*_BMTF_*"
-#  ),
-#  #compressionLevel = cms.untracked.int32(1)
-#)
 
 process.out = cms.OutputModule("OrbitNanoAODOutputModule",
     fileName = cms.untracked.string(options.outputFile),

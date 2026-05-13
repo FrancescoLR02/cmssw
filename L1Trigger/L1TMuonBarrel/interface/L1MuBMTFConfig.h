@@ -70,30 +70,30 @@ private:
   void setDefaults(edm::ParameterSet const&);
 
 private:
-  edm::InputTag m_BMDigiInputTag;
-  edm::InputTag m_BMThetaDigiInputTag;
+ static edm::InputTag m_BMDigiInputTag;
+  static edm::InputTag m_BMThetaDigiInputTag;
 
-  int m_dbgLevel = -1;  // debug level
+  static int m_dbgLevel;  // debug level
 
-  int m_BxMin = -9;
-  int m_BxMax = 7;
+  static int m_BxMin;
+  static int m_BxMax;
 
-  int m_extTSFilter = 1;  // Extrapolation TS-Quality Filter
+  static int m_extTSFilter;  // Extrapolation TS-Quality Filter
 
-  int m_TSOutOfTimeWindow = 1;  // phi window size to be checked
+  static int m_TSOutOfTimeWindow;  // phi window size to be checked
 
-  int m_NbitsExtPhi = 8;  // precision for extrapolation
-  int m_NbitsExtPhib = 8;
-  int m_NbitsPtaPhi = 12;  // precision for pt-assignment
-  int m_NbitsPtaPhib = 10;
-  int m_NbitsPhiPhi = 10;  // precision for phi-assignment
-  int m_NbitsPhiPhib = 10;
+  static int m_NbitsExtPhi;  // precision for extrapolation
+  static int m_NbitsExtPhib;
+  static int m_NbitsPtaPhi;  // precision for pt-assignment
+  static int m_NbitsPtaPhib;
+  static int m_NbitsPhiPhi;  // precision for phi-assignment
+  static int m_NbitsPhiPhib;
 
-  bool m_debug = false;              // debug flag
-  bool m_openLUTs = false;           // use open LUTs
-  bool m_useEX21 = false;            // perform EX21 extrapolation (cross-check EX12)
-  bool m_etaTF = true;               // use eta track finder
-  bool m_TSOutOfTimeFilter = false;  // perform out-of-time TS cancellation
+  static bool m_debug;              // debug flag
+  static bool m_openLUTs;           // use open LUTs
+  static bool m_useEX21;            // perform EX21 extrapolation (cross-check EX12)
+  static bool m_etaTF;               // use eta track finder
+  static bool m_TSOutOfTimeFilter;  // perform out-of-time TS cancellation
 };
 
 #endif

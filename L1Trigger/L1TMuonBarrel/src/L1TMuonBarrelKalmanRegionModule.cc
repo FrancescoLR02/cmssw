@@ -47,13 +47,15 @@ L1TMuonBarrelKalmanRegionModule::~L1TMuonBarrelKalmanRegionModule() {}
 L1MuKBMTrackCollection L1TMuonBarrelKalmanRegionModule::process(L1TMuonBarrelKalmanAlgo* trackMaker,
                                                                 const L1MuKBMTCombinedStubRefVector& stubsAll,
                                                                 int bx, 
-								int bxL,
-								int bxH) {
+                                                                int bxL,
+                                                                int bxH) {
   L1MuKBMTCombinedStubRefVector stubs;
   L1MuKBMTCombinedStubRefVector seeds;
   L1MuKBMTrackCollection pretracks2;
   L1MuKBMTrackCollection pretracks3;
   L1MuKBMTrackCollection pretracks4;
+
+  //std::cout << stubsAll.size() << "\n\n"<< std::endl;
   for (const auto& stub : stubsAll) {
     //std::cout<<"Found stub (bx, wh, sc): "<<stub->bxNum()<<" "<<stub->whNum()<<" "<<stub->scNum()<<std::endl;
     //if (stub->bxNum() != bx)
@@ -82,9 +84,10 @@ L1MuKBMTrackCollection L1TMuonBarrelKalmanRegionModule::process(L1TMuonBarrelKal
     std::sort(seeds.begin(), seeds.end(), sorter);
   }
 
+  //std::cout << seeds.size() << std::endl;
   for (const auto& seed : seeds) {
     std::pair<bool, L1MuKBMTrack> trackInfo = trackMaker->chain(seed, stubs, bx);
-    //printf("Kalman Track %d valid=%d tag=%d rank=%d charge=%d pt=%f eta=%f phi=%f curvature=%d curvature STA =%d stubs=%d chi2=%d pts=%f %f pattern=%d\n",seed->stNum(),trackInfo.first, trackInfo.second.stubs()[0]->tag(),trackInfo.second.rank(),trackInfo.second.charge(),trackInfo.second.pt(),trackInfo.second.eta(),trackInfo.second.phi(),trackInfo.second.curvatureAtVertex(),trackInfo.second.curvatureAtMuon(),int(trackInfo.second.stubs().size()),trackInfo.second.approxChi2(),trackInfo.second.pt(),trackInfo.second.ptUnconstrained(),trackInfo.second.hitPattern());
+    //printf("Kalman Track %d valid=%d tag=%d rank=%d charge=%d pt=%f eta=%f phi=%f curvature=%f curvature STA =%f stubs=%d chi2=%d pts=%f %f pattern=%d\n",seed->stNum(),trackInfo.first, trackInfo.second.stubs()[0]->tag(),trackInfo.second.rank(),trackInfo.second.charge(),trackInfo.second.pt(),trackInfo.second.eta(),trackInfo.second.phi(),trackInfo.second.curvatureAtVertex(),trackInfo.second.curvatureAtMuon(),int(trackInfo.second.stubs().size()),trackInfo.second.approxChi2(),trackInfo.second.pt(),trackInfo.second.ptUnconstrained(),trackInfo.second.hitPattern());
 
     L1MuKBMTrack nullTrack(seed, seed->phi(), 8 * seed->phiB());
     nullTrack.setPtEtaPhi(0, 0, 0);
@@ -167,9 +170,10 @@ L1MuKBMTrackCollection L1TMuonBarrelKalmanRegionModule::process(L1TMuonBarrelKal
   if (verbose_) {
     printf(" -----Sector Processor Kalman Tracks-----\n");
     for (const auto& track1 : out)
-      printf("Kalman Track charge=%d pt=%f eta=%f phi=%f curvature=%d curvature STA =%d stubs=%d chi2=%d pts=%f %f\n",
+      printf("Kalman Track charge=%d pt=%f K=%f eta=%f phi=%f curvature=%f curvature STA =%f stubs=%d chi2=%d pts=%f %f\n",
              track1.charge(),
              track1.pt(),
+             track1.curvature(),
              track1.eta(),
              track1.phi(),
              track1.curvatureAtVertex(),

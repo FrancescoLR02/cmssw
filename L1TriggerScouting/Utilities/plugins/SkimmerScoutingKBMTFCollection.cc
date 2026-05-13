@@ -91,14 +91,14 @@ void SkimmerScoutingKBMTFCollection::produce(edm::Event& iEvent, const edm::Even
   for (const auto& bx : seenBxs) {
       const auto& tracks = kbmtfCollection->bxIterator(bx);
       for (const auto& track : tracks) {
-	   l1t::RegionalMuonCand bmtf_m = algo_->convertToBMTF(track);
-	  if (ugmt::fPt(bmtf_m.hwPt())>ptmin_ and fabs(ugmt::fEta(bmtf_m.hwEta()))<etamax_){
-	     const L1MuKBMTrack trk = track;
-             kbmTrackBuffer[bx].push_back(trk);
-             nKbmTrack++;
-	  }
-      }
-  }
+	     
+        if(track.pt() > ptmin_ && fabs(track.eta()) < etamax_){
+          const L1MuKBMTrack trk = track;
+          kbmTrackBuffer[bx].push_back(trk);
+          nKbmTrack++;
+        }
+	    }
+    }
   kbmTrackCollection->fillAndClear(kbmTrackBuffer, nKbmTrack);
   iEvent.put(std::move(kbmTrackCollection), "L1MuKBMTrackSkimmed");
 

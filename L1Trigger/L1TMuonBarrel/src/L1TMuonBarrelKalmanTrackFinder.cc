@@ -24,7 +24,7 @@ L1MuKBMTrackCollection L1TMuonBarrelKalmanTrackFinder::process(L1TMuonBarrelKalm
   if (verbose_) {
     printf(" -----Track Finder Kalman Tracks (Uncleaned!)-----\n");
     for (const auto& track1 : pretracks)
-      printf("Kalman Track charge=%d pt=%f eta=%f phi=%f curvature=%d curvature STA =%d stubs=%d chi2=%d pts=%f %f\n",
+      printf("Kalman Track charge=%d pt=%f eta=%f phi=%f curvature=%f curvature STA =%f stubs=%d chi2=%d pts=%f %f\n",
              track1.charge(),
              track1.pt(),
              track1.eta(),

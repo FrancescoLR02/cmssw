@@ -1,10 +1,12 @@
 #include "DataFormats/L1TMuon/interface/L1MuKBMTrack.h"
+#include <cmath>
+
 
 L1MuKBMTrack::L1MuKBMTrack() : reco::LeafCandidate(-1, reco::LeafCandidate::PolarLorentzVector(0.1, 0.0, 0.0, 0.105)) {}
 
 L1MuKBMTrack::~L1MuKBMTrack() {}
 
-L1MuKBMTrack::L1MuKBMTrack(const L1MuKBMTCombinedStubRef& seed, int phi, int phiB)
+L1MuKBMTrack::L1MuKBMTrack(const L1MuKBMTCombinedStubRef& seed, int phi, double phiB)
     : reco::LeafCandidate(-1, reco::LeafCandidate::PolarLorentzVector(0.1, 0.0, 0.0, 0.105)),
       covariance_(6, 0.0),
       phi_(phi),
@@ -21,21 +23,21 @@ L1MuKBMTrack::L1MuKBMTrack(const L1MuKBMTCombinedStubRef& seed, int phi, int phi
   residuals_.push_back(0);
 }
 
-int L1MuKBMTrack::curvatureAtMuon() const { return curvMuon_; }
+double L1MuKBMTrack::curvatureAtMuon() const { return curvMuon_; }
 int L1MuKBMTrack::phiAtMuon() const { return phiMuon_; }
-int L1MuKBMTrack::phiBAtMuon() const { return phiBMuon_; }
+double L1MuKBMTrack::phiBAtMuon() const { return phiBMuon_; }
 
-int L1MuKBMTrack::curvatureAtVertex() const { return curvVertex_; }
+double L1MuKBMTrack::curvatureAtVertex() const { return curvVertex_; }
 
 int L1MuKBMTrack::phiAtVertex() const { return phiVertex_; }
 
-int L1MuKBMTrack::dxy() const { return dxy_; }
+double L1MuKBMTrack::dxy() const { return dxy_; }
 
-int L1MuKBMTrack::curvature() const { return curv_; }
+double L1MuKBMTrack::curvature() const { return curv_; }
 
 int L1MuKBMTrack::positionAngle() const { return phi_; }
 
-int L1MuKBMTrack::bendingAngle() const { return phiB_; }
+double L1MuKBMTrack::bendingAngle() const { return phiB_; }
 
 int L1MuKBMTrack::coarseEta() const { return coarseEta_; }
 
@@ -74,20 +76,20 @@ const L1MuKBMTCombinedStubRefVector& L1MuKBMTrack::stubs() const { return stubs_
 
 int L1MuKBMTrack::residual(uint i) const { return residuals_[i]; }
 
-void L1MuKBMTrack::setCoordinates(int step, int curv, int phi, int phiB) {
+void L1MuKBMTrack::setCoordinates(int step, double curv, int phi, double phiB) {
   step_ = step;
   curv_ = curv;
   phiB_ = phiB;
   phi_ = phi;
 }
 
-void L1MuKBMTrack::setCoordinatesAtVertex(int curv, int phi, int dxy) {
+void L1MuKBMTrack::setCoordinatesAtVertex(double curv, int phi, double dxy) {
   curvVertex_ = curv;
   phiVertex_ = phi;
   dxy_ = dxy;
 }
 
-void L1MuKBMTrack::setCoordinatesAtMuon(int curv, int phi, int phiB) {
+void L1MuKBMTrack::setCoordinatesAtMuon(double curv, int phi, double phiB) {
   curvMuon_ = curv;
   phiMuon_ = phi;
   phiBMuon_ = phiB;
@@ -110,6 +112,8 @@ void L1MuKBMTrack::setMetBxm2(float met2) { met_bxm2_ = met2; }
 void L1MuKBMTrack::setMetBxm1(float met1) { met_bxm1_ = met1; }
 void L1MuKBMTrack::setMetBx0(float met0) { met_bx0_ = met0; }
 
+void L1MuKBMTrack::seteLoss(float eLoss) {eLoss_ = eLoss; }
+
 void L1MuKBMTrack::setPtEtaPhi(double pt, double eta, double phi) {
   PolarLorentzVector v(pt, eta, phi, 0.105);
   setP4(v);
@@ -130,7 +134,9 @@ void L1MuKBMTrack::setFineEta(int eta) {
 void L1MuKBMTrack::setRank(int rank) { rank_ = rank; }
 
 void L1MuKBMTrack::setKalmanGain(
-    unsigned int step, unsigned int K, float a1, float a2, float a3, float a4, float a5, float a6) {
+    unsigned int step, double K, float a1, float a2, float a3, float a4, float a5, float a6) {
+
+  K = fabs(K);
   switch (step) {
     case 3:
       kalmanGain3_.push_back(K);

@@ -1,7 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
-from Configuration.Eras.Modifier_run3_2024_L1T_cff import run3_2024_L1T
+#from Configuration.Eras.Modifier_run3_2024_L1T_cff import run3_2024_L1T
 import math
+
+run3_2024_L1T = cms.Modifier()
 
 options = VarParsing.VarParsing ('analysis')
 
@@ -174,18 +176,20 @@ process.kbmtfConvert = cms.EDProducer("L1TMuonBarrelKalmanStubProducer",
     cotTheta_3=cms.vint32(81,77,74,70,66,62,58,51,46,42,38,33,29,24,15,10,5,0,-5,-10,-15,-24,-29,-33,-38,-42,-46,-51,-58,-62,-66,-70,-74,-77,-81),
 )
 
+
+
 # new version
-#process.kbmtfEmulation = cms.EDProducer("L1TMuonBarrelScoutingKalmanTrackProducer",
+# process.kbmtfEmulation = cms.EDProducer("L1TMuonBarrelScoutingKalmanTrackProducer",
 #  src = cms.InputTag("kbmtfConvert"),
-#  algoSettings = bmtfKalmanTrackingSettings,
+#  algoSettings = bmtfKalmanTrackingOfflineSettings,
 #  trackFinderSettings = cms.PSet(
 #    sectorsToProcess = cms.vint32(0,1,2,3,4,5,6,7,8,9,10,11),
-#    verbose = cms.int32(1),
+#    verbose = cms.int32(0),
 #    sectorSettings = cms.PSet(
 #      verbose = cms.int32(1),
 #      wheelsToProcess = cms.vint32(-2,-1,0,1,2),
 #      regionSettings = cms.PSet(
-#        verbose=cms.int32(1)
+#        verbose=cms.int32(0)
 #      )
 #    )
 #  ),
@@ -194,8 +198,8 @@ process.kbmtfConvert = cms.EDProducer("L1TMuonBarrelKalmanStubProducer",
 #  drCut = cms.double(0.1),
 #  phiMult = cms.double(576./(2*math.pi)),
 #  etaMult = cms.double(1./0.010875),
-#  debug = cms.bool(True)
-#)
+#  debug = cms.bool(False)
+# )
 
 process.kbmtfEmulation = cms.EDProducer("L1TMuonBarrelKalmanTrackProducer",
     src = cms.InputTag("kbmtfConvert"),

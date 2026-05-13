@@ -24,7 +24,9 @@ public:
   typedef ROOT::Math::SMatrix<double, 3, 3> Matrix33;
 
   L1TMuonBarrelKalmanAlgo(const edm::ParameterSet& settings);
-  std::pair<bool, L1MuKBMTrack> chain(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, const int);
+  std::pair<bool, L1MuKBMTrack> chain(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, const int, const double);
+  std::pair<bool, L1MuKBMTrack> IterativeChain(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, const int);
+
 
   L1MuKBMTrackCollection clean(const L1MuKBMTrackCollection&, uint);
 
@@ -33,9 +35,10 @@ public:
 
 private:
   bool verbose_;
+  double L1TMuonBarrelKalmanAlgo::BetaEstimation(L1MuKBMTrack&);
   std::pair<bool, uint> match(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, int);
   int correctedPhi(const L1MuKBMTCombinedStubRef&, int);
-  int correctedPhiB(const L1MuKBMTCombinedStubRef&);
+  double correctedPhiB(const L1MuKBMTCombinedStubRef&);
   void propagate(L1MuKBMTrack&);
   void updateEta(L1MuKBMTrack&, const L1MuKBMTCombinedStubRef&);
   bool update(L1MuKBMTrack&, const L1MuKBMTCombinedStubRef&, int, int);
@@ -53,7 +56,7 @@ private:
   bool estimateChiSquare(L1MuKBMTrack&);
   void estimateCompatibility(L1MuKBMTrack&);
   int rank(const L1MuKBMTrack&);
-  int wrapAround(int, int);
+  double wrapAround(double, int);
   std::pair<bool, uint> getByCode(const L1MuKBMTrackCollection& tracks, int mask);
   std::map<int, int> trackAddress(const L1MuKBMTrack&, int&);
   int encode(bool ownwheel, int sector, bool tag);
@@ -67,7 +70,7 @@ private:
 
   //LUT service
   L1TMuonBarrelKalmanLUTs* lutService_;
-  int ptLUT(int K); 
+  double ptLUT(double K); 
 
   //Initial Curvature
   std::vector<double> initK_;

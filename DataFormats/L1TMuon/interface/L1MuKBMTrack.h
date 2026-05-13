@@ -20,26 +20,26 @@ class L1MuKBMTrack : public reco::LeafCandidate {
 public:
   L1MuKBMTrack();
   ~L1MuKBMTrack() override;
-  L1MuKBMTrack(const L1MuKBMTCombinedStubRef&, int, int);
+  L1MuKBMTrack(const L1MuKBMTCombinedStubRef&, int, double);
 
   //UnConstrained curvature at station 1
-  int curvatureAtMuon() const;
+  double curvatureAtMuon() const;
   //unconstrained phi at station 1
   int phiAtMuon() const;
   //unconstrained phiB at station 1
-  int phiBAtMuon() const;
+  double phiBAtMuon() const;
   //Constrained curvature at vertex
-  int curvatureAtVertex() const;
+  double curvatureAtVertex() const;
   //constrained phi at the vertex
   int phiAtVertex() const;
   //Impact parameter as calculated from the muon track
-  int dxy() const;
+  double dxy() const;
   //Unconstrained curvature at the Muon systen
-  int curvature() const;
+  double curvature() const;
   //Unconstrained phi at the Muon systen
   int positionAngle() const;
   //Unconstrained bending angle at the Muon systen
-  int bendingAngle() const;
+  double bendingAngle() const;
   //Coarse eta caluclated only using phi segments
   int coarseEta() const;
   //Approximate Chi2 metric
@@ -55,6 +55,9 @@ public:
   float met_bxm2() const;
   float met_bxm1() const;
   float met_bx0() const;
+
+
+  float eLoss() const;
 
   //Approximate Chi2 metric
   int hitPattern() const;
@@ -109,13 +112,13 @@ public:
   }
 
   //Set coordinates general
-  void setCoordinates(int, int, int, int);
+  void setCoordinates(int, double, int, double);
 
   //Set coordinates at vertex
-  void setCoordinatesAtVertex(int, int, int);
+  void setCoordinatesAtVertex(double, int, double);
 
   //Set coordinates at muon
-  void setCoordinatesAtMuon(int, int, int);
+  void setCoordinatesAtMuon(double, int, double);
 
   //Set eta coarse and pattern
   void setCoarseEta(int);
@@ -137,6 +140,8 @@ public:
   void setMetBxm1(float);
   void setMetBx0(float);
 
+  void seteLoss(float);
+
   //Set floating point coordinates for studies
   void setPtEtaPhi(double, double, double);
   void setPtUnconstrained(float);
@@ -146,7 +151,7 @@ public:
 
   //kalman gain management
   void setKalmanGain(
-      unsigned int step, unsigned int K, float a1, float a2, float a3, float a4 = 0, float a5 = 0, float a6 = 0);
+      unsigned int step, double K, float a1, float a2, float a3, float a4 = 0, float a5 = 0, float a6 = 0);
 
   //set covariance
   void setCovariance(const CovarianceMatrix&);
@@ -167,19 +172,19 @@ private:
   L1MuKBMTCombinedStubRefVector stubs_;
 
   //vertex coordinates
-  int curvVertex_ = 0;
+  double curvVertex_ = 0;
   int phiVertex_ = 0;
-  int dxy_ = 0;
+  double dxy_ = 0;
 
   //muon coordinates
-  int curvMuon_ = 0;
+  double curvMuon_ = 0.0;
   int phiMuon_ = 0;
-  int phiBMuon_ = 0;
+  double phiBMuon_ = 0.0;
 
   //generic coordinates
-  int curv_ = 0;
+  double curv_ = 0.0;
   int phi_ = 0;
-  int phiB_ = 0;
+  double phiB_ = 0.0;
   //common coordinates
   int coarseEta_ = 0;
 
@@ -196,6 +201,8 @@ private:
   float met_bxm2_ = 0;
   float met_bxm1_ = 0;
   float met_bx0_ = 0;
+
+  float eLoss_ = 0.0;
 
   //phi bitmask
   int hitPattern_ = 0;

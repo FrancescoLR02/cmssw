@@ -130,8 +130,8 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   std::vector<int> bx(out->size());
   std::vector<int16_t> charge(out->size());
   std::vector<int16_t> quality(out->size());
-  std::vector<int16_t> dxy(out->size());
-  std::vector<int16_t> curvature(out->size());
+  std::vector<float> dxy(out->size());
+  std::vector<float> curvature(out->size());
   std::vector<int16_t> index(out->size());
   std::vector<float> ptUnconstrained(out->size());
   std::vector<float> etaAtVtx(out->size());
@@ -151,13 +151,22 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   std::vector<std::vector<int16_t>> sTag(4, std::vector<int16_t>(out->size(), 0));
   std::vector<std::vector<int16_t>> sBx(4, std::vector<int16_t>(out->size(), 0));
 
+  std::vector<int16_t> chi2(out->size());
+  std::vector<int16_t> hitPattern(out->size()); 
+  std::vector<double> VarianceK(out->size());
+  std::vector<double> VariancePhiB(out->size());
+
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
 
     l1t::RegionalMuonCand bmtf_m = algo_->convertToBMTF(track);
-    pt[i] = ugmt::fPt(bmtf_m.hwPt());
-    eta[i] = ugmt::fEta(bmtf_m.hwEta());
-    phi[i] = ugmt::fPhi(calcGlobalPhi(bmtf_m));
+    // pt[i] = ugmt::fPt(bmtf_m.hwPt());
+    // eta[i] = ugmt::fEta(bmtf_m.hwEta());
+    // phi[i] = ugmt::fPhi(calcGlobalPhi(bmtf_m));
+
+    pt[i] = track.pt();
+    eta[i] = track.eta();
+    phi[i] = track.phi();
     met_bxm9[i] =track.met_bxm9();
     met_bxm8[i] =track.met_bxm8();
     met_bxm7[i] =track.met_bxm7();
@@ -172,11 +181,19 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
     //std::cout<<"KBMTF track: "<<pt[i]<<" "<<eta[i]<<" "<<phi[i]<<endl;
     charge[i] = bmtf_m.hwSign()==1? -1 : 1;
     quality[i] = bmtf_m.hwQual();
-    //dxy[i] = track.dxy(); // do we need this variable?
-    dxy[i] = bmtf_m.hwDXY();
-    curvature[i] = bmtf_m.hwK();
+    
+    //equivalent to the 8 bit shift in the KF class
+    dxy[i] = fabs(track.dxy()/256.0);
+
+    
+    curvature[i] = track.curvatureAtVertex();
     index[i] = bmtf_m.processor(); // wrong for now
     ptUnconstrained[i] = ugmt::fPtUnconstrained(bmtf_m.hwPtUnconstrained());
+
+    chi2[i] = track.approxChi2();
+    hitPattern[i] = track.hitPattern();
+    VarianceK[i] = track.covariance()[0];
+    VariancePhiB[i] = track.covariance()[8];
 
     int ptRedInWidth = m_BPhiExtrapolation_->getPtRedInWidth();
     int ptMask = (1 << ptRedInWidth) - 1;
@@ -243,12 +260,16 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   out->addColumn<int>("bx", bx, "bx");
   out->addColumn<int16_t>("hwCharge", charge, "hwCharge (hw units)");
   out->addColumn<int16_t>("hwQual", quality, "hwQual (hw units)");
-  out->addColumn<int16_t>("hwDXY", dxy, "untruncated transverse impact parameter (hw units)");
-  out->addColumn<int16_t>("hwK", curvature, "curvature (hw units)");
+  out->addColumn<float>("hwDXY", dxy, "untruncated transverse impact parameter (hw units)");
+  out->addColumn<float>("hwK", curvature, "curvature (hw units)");
   out->addColumn<int16_t>("processor", index, "processor ([0-11])");
   out->addColumn<float>("ptUnconstrained", ptUnconstrained, "pt without vertex constraint (physical units)");
   out->addColumn<float>("etaAtVtx", etaAtVtx, "eta re-extrapolated at vertex (physical units)");
   out->addColumn<float>("phiAtVtx", phiAtVtx, "phi re-extrapolated at vertex (physical units)");
+  out->addColumn<int16_t>("chi2", chi2, "Chi squared value (integer)");
+  out->addColumn<int16_t>("Hit_pattern", hitPattern, "Hit Pattern");
+  out->addColumn<double>("K Variance", VarianceK, "K Variance");
+  //out->addColumn<double>("PhiB Variance", VariancePhiB, "PhiB Variance");
 
   if (addStubs_) {
     out->addColumn<int16_t>("nStub", nStub, "number of stubs used to reconstruct KBMTF track");

@@ -35,13 +35,8 @@ private:
   void endStream() override;
 
   int calculateEta(uint i, int wheel, uint sector, uint station);
-  L1MuKBMTCombinedStub buildStub(int wheel, int sector, int station,
-                                 int phi, int phiB, bool tag,
-                                 int eta, int qeta, int bx,
-                                 int quality);
-  L1MuKBMTCombinedStub buildStubNoEta(int wheel, int sector, int station,
-                                      int phi, int phiB, bool tag,
-                                      int bx, int quality);
+  L1MuKBMTCombinedStub buildStub(int wheel, int sector, int station, int phi, double phiB, bool tag, int eta, int qeta, int bx, int quality);
+  L1MuKBMTCombinedStub buildStubNoEta(int wheel, int sector, int station, int phi, double phiB, bool tag, int bx, int quality);
 
   edm::EDGetTokenT<BMTFStubOrbitCollection> src_;
   int bxMin_;
@@ -130,10 +125,7 @@ int convertToL1MuKBMTCombinedStub::calculateEta(uint i, int wheel, uint sector, 
   return eta;
 }
 
-L1MuKBMTCombinedStub convertToL1MuKBMTCombinedStub::buildStub(int wheel, int sector, int station,
-                                                              int phi, int phiB, bool tag,
-                                                              int eta, int qeta, int bx,
-                                                              int quality) {
+L1MuKBMTCombinedStub convertToL1MuKBMTCombinedStub::buildStub(int wheel, int sector, int station, int phi, double phiB, bool tag, int eta, int qeta, int bx, int quality) {
   // convert eta hw values to global units
   int qeta1 = 0;
   int qeta2 = 0;
@@ -168,9 +160,7 @@ L1MuKBMTCombinedStub convertToL1MuKBMTCombinedStub::buildStub(int wheel, int sec
   return stub;
 }
 
-L1MuKBMTCombinedStub convertToL1MuKBMTCombinedStub::buildStubNoEta(int wheel, int sector, int station,
-                                                                   int phi, int phiB, bool tag,
-                                                                   int bx, int quality) {
+L1MuKBMTCombinedStub convertToL1MuKBMTCombinedStub::buildStubNoEta(int wheel, int sector, int station, int phi, double phiB, bool tag, int bx, int quality) {
 
   int qeta1 = 0;
   int qeta2 = 0;

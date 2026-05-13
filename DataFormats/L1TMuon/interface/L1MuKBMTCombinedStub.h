@@ -52,7 +52,7 @@ public:
                        int sector,
                        int station,
                        int phi,
-                       int phiB,
+                       double phiB,
                        bool tag,
                        int bx,
                        int quality,
@@ -73,7 +73,7 @@ public:
   /// return phi
   inline int phi() const { return phi_; }
   /// return phib
-  inline int phiB() const { return phiB_; }
+  inline double phiB() const { return phiB_; }
   /// return quality code
   inline int quality() const { return quality_; }
   /// return tag (second TS tag)
@@ -105,7 +105,7 @@ private:
   int scNum_;
   int stNum_;
   int phi_;      // 12 bits
-  int phiB_;     // 10 bits
+  double phiB_;     // 10 bits
   bool tag_;     // tag for second TS (of chamber)
   int quality_;  // 3 bits
   int bxNum_;    // bunch crossing identifier
