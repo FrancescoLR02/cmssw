@@ -1,5 +1,6 @@
 #include <cmath>
 #include <climits>
+#include <fstream>
 #include "DataFormats/Math/interface/LorentzVector.h" 
 #include "L1Trigger/L1TMuonBarrel/interface/L1TMuonBarrelKalmanAlgo.h"
 #include "ap_int.h"
@@ -1032,7 +1033,7 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
 
 
 
-double L1TMuonBarrelKalmanAlgo::BetaEstimation(L1MuKBMTrack& track){
+double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
 
   //speed of light in m/ns
   double c = 0.299792;
@@ -1071,7 +1072,6 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(L1MuKBMTrack& track){
 
   double deltaR = stationRadii[maxStation] - stationRadii[minStation];
   
-  //TODO CHECK IF IT IS CORRECT!
   double pathLength = deltaR * std::cosh(track.eta());
 
   //double beta = deltaR / (c * spreadTime);
@@ -1080,13 +1080,70 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(L1MuKBMTrack& track){
   if (beta > 1.0) return 1.0;
   if (beta < 0.2) return 0.2;
 
-  if (spreadBX > 0) {
-    printf("SLOW TRACK: minSt=%d bx=%d, maxSt=%d bx=%d, spreadBX=%d, beta=%.3f, eta=%.3f\n",
-         minStation, bxAtMinStation, maxStation, bxAtMaxStation, spreadBX, beta, track.eta());
-  }
+  // if (spreadBX > 0) {
+  //   printf("SLOW TRACK: minSt=%d bx=%d, maxSt=%d bx=%d, spreadBX=%d, beta=%.3f, eta=%.3f\n",
+  //        minStation, bxAtMinStation, maxStation, bxAtMaxStation, spreadBX, beta, track.eta());
+  // }
 
   return beta;
 }
+
+
+//! Debug settings -------------- SAVE IN CSV THE INFORMATIONS ABOUT FIRST AND SECOND CHAIN
+// std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef &seed,
+//                                                                       const L1MuKBMTCombinedStubRefVector& stubs,
+//                                                                       int bx){
+//     // Open file
+//     static std::ofstream debugFile("iterativeChain_All.csv", std::ios::out);
+//     static bool headerWritten = false;
+//     if (!headerWritten) {
+//         debugFile << "pass,hitPattern,pt,approxChi2,eta,phi,beta,dR\n";
+//         headerWritten = true;
+//     }
+
+//     double starting_eLoss = eLoss_[0];
+//     float beta = 1.0;
+
+//     std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
+
+    
+//     // if (!firstChain.first)
+//     //     return firstChain;
+
+//     const auto& t1 = firstChain.second;
+//     beta = BetaEstimation(t1);
+
+//     double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
+
+//     // // Skip re-running if beta didn't change meaningfully
+//     // if (std::abs(beta - 1.0f) < 1e-4f) {
+//     //     debugFile << "1," << t1.hitPattern() << "," << t1.pt() << ","
+//     //               << t1.approxChi2() << "," << t1.eta() << ","
+//     //               << t1.phi() << "," << t1.beta() << ",0\n";
+//     //     return firstChain;
+//     // }
+
+//     std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
+//     const auto& t2 = secondChain.second;
+
+//     // Compute deltaR inline
+//     double dEta = t1.eta() - t2.eta();
+//     double dPhi = t1.phi() - t2.phi();
+//     // wrap dPhi to [-pi, pi]
+//     while (dPhi >  M_PI) dPhi -= 2 * M_PI;
+//     while (dPhi < -M_PI) dPhi += 2 * M_PI;
+//     double dR = std::sqrt(dEta * dEta + dPhi * dPhi);
+
+//         debugFile << "1," << t1.hitPattern() << "," << t1.pt() << ","
+//                   << t1.approxChi2() << "," << t1.eta() << ","
+//                   << t1.phi() << "," << t1.beta() << "," << dR << "\n";
+//         debugFile << "2," << t2.hitPattern() << "," << t2.pt() << ","
+//                   << t2.approxChi2() << "," << t2.eta() << ","
+//                   << t2.phi() << "," << t2.beta() << "," << dR << "\n";
+
+
+//     return secondChain;
+// }
 
 
 
@@ -1099,29 +1156,30 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1Mu
     float beta = 1.0;
     std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
 
-    if (!firstChain.first){
-      return firstChain;
-    }
+    return firstChain;
 
-    //Define the beta values for given BX spread hypothesis
-    beta = BetaEstimation(firstChain.second);
+    // if (!firstChain.first){
+    //   return firstChain;
+    // }
+
+    // //Define the beta values for given BX spread hypothesis
+    // beta = BetaEstimation(firstChain.second);
     
-    double eLossTrueValue;
+    // double eLossTrueValue;
 
-    //Define new eLoss term proportional to the original value scaled by 1/beta^2
-    if(beta != 1.0) eLossTrueValue = 1.0 / (beta*beta) * starting_eLoss;
-    else eLossTrueValue = starting_eLoss;
+    // //Define new eLoss term proportional to the original value scaled by 1/beta^2
+    // if(beta != 1.0) eLossTrueValue = 1.0 / (beta*beta) * starting_eLoss;
+    // else eLossTrueValue = starting_eLoss;
 
-    //printf("Beta value %f, estimated eLoss %f\n", beta, eLossTrueValue);
+    // //printf("Beta value %f, estimated eLoss %f\n", beta, eLossTrueValue);
 
-    //run again the chain with the new eLoss hypostesis
-    std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
+    // //run again the chain with the new eLoss hypostesis
+    // std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
 
-    //output the pari of tracks
-    return secondChain;
+    // //output the pari of tracks
+    // return secondChain;
 
 }
-
 
 bool L1TMuonBarrelKalmanAlgo::estimateChiSquare(L1MuKBMTrack& track) {
   //here we have a simplification of the algorithm for the sake of the emulator - rsult is identical

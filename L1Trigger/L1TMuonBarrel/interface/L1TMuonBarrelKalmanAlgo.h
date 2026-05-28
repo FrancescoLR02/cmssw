@@ -35,7 +35,7 @@ public:
 
 private:
   bool verbose_;
-  double BetaEstimation(L1MuKBMTrack&);
+  double BetaEstimation(const L1MuKBMTrack&);
   std::pair<bool, uint> match(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, int);
   int correctedPhi(const L1MuKBMTCombinedStubRef&, int);
   double correctedPhiB(const L1MuKBMTCombinedStubRef&);

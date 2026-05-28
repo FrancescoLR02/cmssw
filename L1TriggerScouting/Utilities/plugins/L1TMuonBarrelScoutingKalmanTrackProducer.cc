@@ -57,6 +57,8 @@ private:
   double etaMult_;
   bool debug_;
 };
+
+
 L1TMuonBarrelScoutingKalmanTrackProducer::L1TMuonBarrelScoutingKalmanTrackProducer(const edm::ParameterSet& iConfig)
     : src_(consumes<L1MuKBMTCombinedStubCollection>(iConfig.getParameter<edm::InputTag>("src"))),
       gmtSrc_(consumes<MuonOrbitCollection>(iConfig.getParameter<edm::InputTag>("gmtSrc"))),
