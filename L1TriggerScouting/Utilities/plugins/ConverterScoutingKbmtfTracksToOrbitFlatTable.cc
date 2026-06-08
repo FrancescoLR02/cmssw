@@ -151,12 +151,14 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   std::vector<std::vector<int16_t>> sTag(4, std::vector<int16_t>(out->size(), 0));
   std::vector<std::vector<int16_t>> sBx(4, std::vector<int16_t>(out->size(), 0));
 
+  //manually implemented
   std::vector<int16_t> chi2(out->size());
   std::vector<int16_t> hitPattern(out->size()); 
   std::vector<double> VarianceK(out->size());
   std::vector<double> VariancePhiB(out->size());
   std::vector<double> eLoss(out->size());
   std::vector<float> beta(out->size());
+  std::vector<std::vector<double>> phiBTrack(4, std::vector<double>(out->size(), 0));
 
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
@@ -198,6 +200,14 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
     VariancePhiB[i] = track.covariance()[8];
     eLoss[i] = track.eLoss();
     beta[i] = track.beta();
+
+    //
+    const std::vector<double>& currentTrackPhiBs = track.trackPhiBCollection();
+    for(int stat = 0; stat < 4; ++stat) {
+      phiBTrack[stat][i] = currentTrackPhiBs[stat];
+    }
+
+
 
     int ptRedInWidth = m_BPhiExtrapolation_->getPtRedInWidth();
     int ptMask = (1 << ptRedInWidth) - 1;
@@ -291,7 +301,8 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwEta2", sHwEta2[i], "eta of second stub in chamber (hw units)");
   	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwQEta2", sHwQEta2[i], "eta quality of second stub in chamber (hw units)");
   	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"Tag", sTag[i], "tag=0 is for second stub in chamber");*/
-	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"Bx", sBx[i], "bx");
+	    out->addColumn<int16_t>("s"+std::to_string(i+1)+"Bx", sBx[i], "bx");
+      out->addColumn<double>("s" + std::to_string(i+1) + "TrackPhiB", phiBTrack[i], "propagated/updated phiB from KF track");
     }
   }
 

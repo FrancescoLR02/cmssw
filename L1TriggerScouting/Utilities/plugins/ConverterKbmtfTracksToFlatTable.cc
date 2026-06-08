@@ -205,6 +205,8 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   std::vector<int16_t> s4HwQEta2;
   std::vector<int16_t> s4Tag;
   std::vector<int16_t> s4Bx;
+  std::vector<double> eLoss;
+  std::vector<float> beta;
 
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
@@ -258,6 +260,8 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
 
     etaAtVtx.push_back(ugmt::fEta(bmtf_m.hwEta() + deltaEta));
     phiAtVtx.push_back(ugmt::fPhi(calcGlobalPhi(bmtf_m) + deltaPhi));
+    eLoss.push_back(track.eLoss());
+    beta.push_back(track.beta());
 
     if (addStubs_) {
       /*nStub[i] = track.stubs().size();
@@ -385,6 +389,8 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   out->addColumn<float>("ptUnconstrained", ptUnconstrained, "pt without vertex constraint (physical units)");
   out->addColumn<float>("etaAtVtx", etaAtVtx, "eta re-extrapolated at vertex (physical units)");
   out->addColumn<float>("phiAtVtx", phiAtVtx, "phi re-extrapolated at vertex (physical units)");
+  out->addColumn<double>("energy loss", eLoss, "eLoss");
+  out->addColumn<float>("beta", beta, "bets");
 
   if (addStubs_) {
     out->addColumn<int16_t>("nStub", nStub, "number of stubs used to reconstruct KBMTF track");

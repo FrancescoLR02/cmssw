@@ -296,14 +296,14 @@ process.kbmtfTable = cms.EDProducer("ConverterKbmtfTracksToFlatTable",
   algoSettings = bmtfKalmanTrackingSettings,
   addStubs = cms.bool(True)
 )
-process.kbmtfOfflineTable = cms.EDProducer("ConverterKbmtfTracksToFlatTable",
-  #src = cms.InputTag("kbmtfOfflineEmulation", "L1MuKBMTrack"),
-  src = cms.InputTag("kbmtfOfflineEmulation", ""),
-  name = cms.string("L1KBMTFOff"),
-  doc = cms.string("Re-emulated KBMTF muons with offline propagation"),
-  algoSettings = bmtfKalmanTrackingOfflineSettings,
-  addStubs = cms.bool(True)
-)
+# process.kbmtfOfflineTable = cms.EDProducer("ConverterKbmtfTracksToFlatTable",
+#   #src = cms.InputTag("kbmtfOfflineEmulation", "L1MuKBMTrack"),
+#   src = cms.InputTag("kbmtfOfflineEmulation", ""),
+#   name = cms.string("L1KBMTFOff"),
+#   doc = cms.string("Re-emulated KBMTF muons with offline propagation"),
+#   algoSettings = bmtfKalmanTrackingOfflineSettings,
+#   addStubs = cms.bool(True)
+# )
 
 process.genTable = cms.EDProducer("ConverterGenParticlesToFlatTable",
   src = cms.InputTag("genParticles"),
@@ -338,7 +338,7 @@ process.p = cms.Path(
   process.kbmtfOfflineEmulation +
   process.stubTable +
   process.kbmtfTable +
-  process.kbmtfOfflineTable + 
+  #!!!!!! CHECK IF IT IS NEEDED! process.kbmtfOfflineTable + 
   process.genTable + 
   process.hltTable + 
   process.triggerObjectsTable 

@@ -59,6 +59,12 @@ public:
 
   double eLoss() const;
   float beta() const;
+
+  //Returns the entire PhiB collection
+  const std::vector<double>& trackPhiBCollection() const { return trackPhiB_; }
+  //returns only the specific PhiB
+  double trackPhiB(int station) const;
+
   //Approximate Chi2 metric
   int hitPattern() const;
   //step;
@@ -143,6 +149,9 @@ public:
   void seteLoss(double);
   void setBeta(float);
 
+  //Set PhiB in the vector previously declared
+  void setTrackPhiB(int station, double phiB);
+
   //Set floating point coordinates for studies
   void setPtEtaPhi(double, double, double);
   void setPtUnconstrained(float);
@@ -205,6 +214,9 @@ private:
 
   double eLoss_ = 0.0;
   float beta_ = 1.0;
+
+  std::vector<double> trackPhiB_ = {-9999, -9999, -9999, -9999};
+
 
   //phi bitmask
   int hitPattern_ = 0;

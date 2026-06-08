@@ -98,6 +98,22 @@ void L1MuKBMTrack::setCoordinatesAtMuon(double curv, int phi, double phiB) {
   phiBMuon_ = phiB;
 }
 
+double L1MuKBMTrack::trackPhiB(int station) const {
+  if (station >= 1 && station <= 4) {
+    return trackPhiB_[station - 1];
+  }
+  //placeholder if there is no value in that specific station
+  return -9999.0; 
+}
+
+void L1MuKBMTrack::setTrackPhiB(int station, double phiB) {
+  if (station >= 1 && station <= 4) {
+    trackPhiB_[station - 1] = phiB;
+  }
+}
+
+
+
 void L1MuKBMTrack::setCoarseEta(int eta) { coarseEta_ = eta; }
 
 void L1MuKBMTrack::setHitPattern(int pattern) { hitPattern_ = pattern; }

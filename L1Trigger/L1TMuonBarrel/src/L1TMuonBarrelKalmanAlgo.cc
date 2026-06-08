@@ -326,17 +326,13 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
 
   double eLoss = track.eLoss();
 
-  //energy loss term only for MU->VERTEX
-  //int offset=int(charge*eLoss_[step-1]*K*K);
-  //  if (fabs(offset)>4096)
-  //      offset=4096*offset/fabs(offset);
+
   int charge = 1;
   if (K != 0)
     charge = K / fabs(K);
 
   double KBound = K;
 
-  //! should i keep it??
   if (KBound > 4095)
     KBound = 4095;
   if (KBound < -4095)
@@ -389,7 +385,6 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
   double phiBNew = WrapDoubleToBits(phiB11 + phiB12, 13);
     
   //Only for the propagation to vertex we use the LUT for better precision and the full function
-  //!Probably here as well
   if (step == 1) {
     double addr = KBound / 2;
     // Extra steps to mimic firmware for vertex prop
@@ -823,6 +818,7 @@ void L1TMuonBarrelKalmanAlgo::setFloatingPointValues(L1MuKBMTrack& track, bool v
   }
 }
 
+
 std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombinedStubRef& seed,
                                                              const L1MuKBMTCombinedStubRefVector& stubs,
                                                             int bx, 
@@ -854,8 +850,13 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
 
   L1MuKBMTrack nullTrack(seed, correctedPhi(seed, seed->scNum()), correctedPhiB(seed));
   seedQual = seed->quality();
+
+
   for (const auto& mask : combinatorics) {
     L1MuKBMTrack track(seed, correctedPhi(seed, seed->scNum()), correctedPhiB(seed));
+
+    //Save the information about phiB in the corresponding station:
+    track.setTrackPhiB(seed->stNum(), correctedPhiB(seed));
 
     track.setBeta(beta);
     track.seteLoss(dyn_eLoss);
@@ -908,7 +909,7 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
     }
     track.setCovariance(covariance);
 
-    //
+
     if (verbose_) {
       printf("New Kalman fit staring at step=%d, phi=%d,phiB=%f with curvature=%f\n",
              track.step(),
@@ -940,6 +941,8 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
 
     int phiAtStation2 = 0;
 
+
+
     while (track.step() > 0) {
       // muon station 1
       if (track.step() == 1) {
@@ -970,6 +973,9 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
           std::pair<bool, uint> bestStub = match(seed, stubs, track.step());
           if ((!bestStub.first) || (!update(track, stubs[bestStub.second], mask, seedQual)))
             break;
+
+          //Save PhiB information
+          track.setTrackPhiB(track.step(), track.bendingAngle());
           if (verbose_) {
             printf("updated Coordinates step:%d,phi=%d,phiB=%f,K=%f\n",
                    track.step(),
@@ -1013,6 +1019,8 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
     }
   }
 
+  
+
   L1MuKBMTrackCollection bxtracks;
   for (const auto& tmp_track : pretracks) {
      bool do_push=false;
@@ -1038,54 +1046,172 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
   //speed of light in m/ns
   double c = 0.299792;
 
-
   //define the radius of each station from the origin
   const double stationRadii[4] = {4.2, 5.0, 6.0, 7.0};
 
 
-  //Finds the min, max and their arguments to determine the spread of the track.
-  int minStation = 4, maxStation = -1;
-  int bxAtMinStation = 0, bxAtMaxStation = 0;
+  int stub_bxs[4] = {-99, -99, -99, -99};
 
-  for(const auto & stub : track.stubs()){
-    int stNum = stub->stNum() - 1;
-    int bxNum = stub->bxNum();
-
-    if (stNum < minStation){
-      minStation = stNum;
-      bxAtMinStation = bxNum;
-    }
-
-    if(stNum > maxStation){
-      maxStation = stNum;
-      bxAtMaxStation = bxNum;
-    }
+  //populates array without any constraint on the ordering 
+  for (const auto& stub : track.stubs()) {
+      int stNum = stub->stNum() - 1;
+      if (stNum >= 0 && stNum < 4) {
+          int bxNum = stub->bxNum();
+          
+          // If it's the first stub in this station, or if we want to handle multiple stubs:
+          if (stub_bxs[stNum] == -99) {
+              stub_bxs[stNum] = bxNum;
+          } else {
+              stub_bxs[stNum] = std::min(stub_bxs[stNum], bxNum);
+          }
+      }
   }
 
-  if (minStation >= maxStation) return 1.0;
+  //Find the actual minimum and maximum active stations
+  int minStation = -1, maxStation = -1;
+  for (int i = 0; i < 4; ++i) {
+      if (stub_bxs[i] != -99) {
+          if (minStation == -1) minStation = i; 
+          maxStation = i;                       
+      }
+  }
 
-  int spreadBX = bxAtMaxStation - bxAtMinStation;
+  if (minStation == -1 || maxStation == -1 || minStation >= maxStation) {
+      return 1.0;
+  }
+
+  // Compute spread
+  int spreadBX = stub_bxs[maxStation] - stub_bxs[minStation];
   if (spreadBX <= 0) return 1.0;
 
   //Time spread in nanoseconds
   double spreadTime = spreadBX * 25.0;
 
   double deltaR = stationRadii[maxStation] - stationRadii[minStation];
-  
-  double pathLength = deltaR * std::cosh(track.eta());
-
-  //double beta = deltaR / (c * spreadTime);
-  double beta = pathLength / (c * spreadTime);
+  double beta = deltaR * std::cosh(track.eta()) / (c * spreadTime);
 
   if (beta > 1.0) return 1.0;
-  if (beta < 0.2) return 0.2;
-
-  // if (spreadBX > 0) {
-  //   printf("SLOW TRACK: minSt=%d bx=%d, maxSt=%d bx=%d, spreadBX=%d, beta=%.3f, eta=%.3f\n",
-  //        minStation, bxAtMinStation, maxStation, bxAtMaxStation, spreadBX, beta, track.eta());
-  // }
+  //if (beta < 0.2) return 0.2;
 
   return beta;
+}
+
+
+
+
+double L1TMuonBarrelKalmanAlgo::BetaEstimationPhiB(const L1MuKBMTrack& track){         
+
+  int stub_bxs[4] = {-99, -99, -99, -99};
+
+  //populates array without any constraint on the ordering: compute the absolute distance between BX
+  for (const auto& stub : track.stubs()) {
+      int stNum = stub->stNum() - 1;
+      if (stNum >= 0 && stNum < 4) {
+          int bxNum = stub->bxNum();
+          
+          // If it's the first stub in this station, or if we want to handle multiple stubs:
+          if (stub_bxs[stNum] == -99) {
+              stub_bxs[stNum] = bxNum;
+          } else {
+              stub_bxs[stNum] = std::min(stub_bxs[stNum], bxNum);
+          }
+      }
+  }
+
+  //Find the actual minimum and maximum active stations
+  int minStation = -1, maxStation = -1;
+  for (int i = 0; i < 4; ++i) {
+      if (stub_bxs[i] != -99) {
+          if (minStation == -1) minStation = i; 
+          maxStation = i;                       
+      }
+  }
+
+  if (minStation == -1 || maxStation == -1 || minStation >= maxStation) {
+    return 1.0;
+  }
+
+  // Compute spread: epsilon 
+  int spreadBX = stub_bxs[maxStation] - stub_bxs[minStation];
+  if (spreadBX == 0) return 1.0;
+
+  std::vector<double> PhiBColl = track.trackPhiBCollection();
+  std::vector<double> validBetaEstimation;
+
+  //Retrieve PhiB and compute Beta
+  for (int i = 0; i < 3; ++i){
+    int currBX = stub_bxs[i];
+    if (currBX == -99) continue;
+
+    for (int j = i + 1; j <= 3; ++j){
+      int nextBX = stub_bxs[j];
+      if (nextBX == -99) continue;
+
+      double diffBX = std::abs(nextBX - currBX);
+
+      double phiB = PhiBColl[i];
+      double phiBp1 = PhiBColl[j];
+
+      if (std::abs(phiBp1 - phiB) < 0.0001) continue;
+
+      double betaEst = sqrt(std::abs(diffBX/2 * (phiB*phiBp1)/(phiBp1 - phiB)));
+
+      if(betaEst > 1.0) betaEst = 1.0;
+
+      validBetaEstimation.push_back(betaEst);
+
+      break;
+    }
+
+  }
+
+  //Average the value of beta
+  if(validBetaEstimation.empty()) return 1.0;
+
+  double sumBeta = 0.0;
+  for(double b : validBetaEstimation){
+    sumBeta += b;
+  }
+
+  double finalBeta = sumBeta / validBetaEstimation.size();
+
+  std::cout << "[" << stub_bxs[0] << "," << stub_bxs[1] << "," << stub_bxs[2] << "," << stub_bxs[3] << "], " << " [" << PhiBColl[0] << "," << PhiBColl[1] << "," << PhiBColl[2] << "," << PhiBColl[3] << "], " << finalBeta << std::endl;
+
+  for(double b : validBetaEstimation){
+    std::cout << b << std::endl;
+  }
+
+  return finalBeta;
+
+}
+
+
+
+
+std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef &seed, const L1MuKBMTCombinedStubRefVector& stubs, int bx){
+
+  //Start with a first pass chain
+  double starting_eLoss = eLoss_[0];
+  float beta = 1.0;
+
+  std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
+
+  double test = BetaEstimationPhiB(firstChain.second);
+
+  return firstChain;
+  // if (!firstChain.first) return firstChain;
+
+  // //Define the beta values for given BX spread hypothesis
+  // beta = BetaEstimation(firstChain.second);
+
+  // //Define new eLoss term proportional to the original value scaled by 1/beta^2
+  // double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
+
+  // //run again the chain with the new eLoss hypostesis
+  // std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
+
+  // //output the newly computed track
+  // return secondChain;
 }
 
 
@@ -1147,39 +1273,6 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
 
 
 
-std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef &seed,
-                                                                      const L1MuKBMTCombinedStubRefVector& stubs,
-                                                                      int bx){
-
-    //Start with a first pass chain
-    double starting_eLoss = eLoss_[0];
-    float beta = 1.0;
-    std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
-
-    return firstChain;
-
-    // if (!firstChain.first){
-    //   return firstChain;
-    // }
-
-    // //Define the beta values for given BX spread hypothesis
-    // beta = BetaEstimation(firstChain.second);
-    
-    // double eLossTrueValue;
-
-    // //Define new eLoss term proportional to the original value scaled by 1/beta^2
-    // if(beta != 1.0) eLossTrueValue = 1.0 / (beta*beta) * starting_eLoss;
-    // else eLossTrueValue = starting_eLoss;
-
-    // //printf("Beta value %f, estimated eLoss %f\n", beta, eLossTrueValue);
-
-    // //run again the chain with the new eLoss hypostesis
-    // std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
-
-    // //output the pari of tracks
-    // return secondChain;
-
-}
 
 bool L1TMuonBarrelKalmanAlgo::estimateChiSquare(L1MuKBMTrack& track) {
   //here we have a simplification of the algorithm for the sake of the emulator - rsult is identical
@@ -1424,14 +1517,17 @@ int L1TMuonBarrelKalmanAlgo::fp_product(float a, int b, uint bits) {
 double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
   int charge = (K >= 0) ? +1 : -1;
   float lsb = 1.25 / float(1 << 13);
+  
+  
   double FK = fabs(K);
+
+  //Maximum pT: 2500GeV
+  if (FK < 13) FK = 13.;
+
+
 
   if (FK > 2047)
     FK = 2047.;
-
-  //Decrease the minimum value to 13 (before 26). Maximum pT: 2500GeV
-  if (FK < 13)
-    FK = 13.;
 
   FK = FK * lsb;
 
