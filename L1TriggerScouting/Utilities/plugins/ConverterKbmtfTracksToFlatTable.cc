@@ -181,13 +181,12 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   std::vector<double> eLoss;
   std::vector<float> beta;
   
-  // FIX: Sized residualTrack directly from input source vector size
-  std::vector<std::vector<int>> residualTrack(4, std::vector<int>(src->size(), 0));
+  std::vector<std::vector<double>> residualTrack(4, std::vector<double>(src->size(), 0));
 
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
 
-    const std::vector<int>& currentResidual = track.residualVector();
+    const std::vector<double>& currentResidual = track.innovationVector();
     for(int stat = 0; stat < 4; ++stat) {
       residualTrack[stat][i] = currentResidual[stat];
     }

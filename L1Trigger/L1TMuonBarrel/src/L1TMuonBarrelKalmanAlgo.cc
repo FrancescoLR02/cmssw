@@ -394,7 +394,12 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
       DXY = -dxyOffset;
     else
       DXY = dxyOffset;
-    phiBNew = DXY - phiB;
+
+    //mimic the saturation in the integer version
+    DXY = std::max(-2048.0, std::min(2047.0, DXY));
+    double raw = DXY - phiB;
+    phiBNew = std::max(-4096.0, std::min(4095.0, raw));
+
     if (verbose_) {
       printf("Vertex phiB prop = %f - %f = %f\n", DXY, phiB, phiBNew);
     }
@@ -475,6 +480,9 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline(L1MuKBMTrack& track, const L1MuKBMTC
   residual[0] = phi - trackPhi;
   residual[1] = phiB - trackPhiB;
 
+  
+  track.setInnovationPhiB(stub->stNum() - 1, (residual[1]) / 8.0);
+
   Matrix23 H;
   H(0, 0) = 0.0;
   H(0, 1) = 1.0;
@@ -514,6 +522,9 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline(L1MuKBMTrack& track, const L1MuKBMTC
   double phiBNew = trackPhiB + Gain(2, 0) * residual(0) + Gain(2, 1) * residual(1);
 
   track.setResidual(stub->stNum() - 1, fabs(phi - phiNew) + fabs(phiB - phiBNew) / 8);
+
+
+  
 
   if (verbose_) {
     printf("residual %d - %d = %d %f - %f = %f\n", phi, trackPhi, int(residual[0]), phiB, trackPhiB, residual[1]);

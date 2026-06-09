@@ -104,6 +104,9 @@ public:
   //get residual
   int residual(uint) const;
   const std::vector<int>& residualVector() const { return residuals_; }
+  const std::vector<double>& innovationVector() const { return innovations_; }
+
+
 
   //check ogverlap
   bool overlapTrack(const L1MuKBMTrack&) const;
@@ -178,6 +181,7 @@ public:
 
   //set residual
   void setResidual(uint, int);
+  void setInnovationPhiB(uint, double);
 
 private:
   //Covariance matrix for studies
@@ -258,6 +262,7 @@ private:
   std::vector<float> kalmanGain3_;
 
   std::vector<int> residuals_;
+  std::vector<double> innovations_;
 };
 
 #endif

@@ -159,7 +159,7 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   std::vector<double> eLoss(out->size());
   std::vector<float> beta(out->size());
   std::vector<std::vector<double>> phiBTrack(4, std::vector<double>(out->size(), 0));
-  std::vector<std::vector<int>> residualTrack(4, std::vector<int>(out->size(), 0));
+  std::vector<std::vector<double>> residualTrack(4, std::vector<double>(out->size(), 0));
 
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
@@ -204,7 +204,7 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
 
     //Keep track of other information
     const std::vector<double>& currentTrackPhiBs = track.trackPhiBCollection();
-    const std::vector<int>& currentResidual = track.residualVector();
+    const std::vector<double>& currentResidual = track.innovationVector();
 
     for(int stat = 0; stat < 4; ++stat) {
       phiBTrack[stat][i] = currentTrackPhiBs[stat];
