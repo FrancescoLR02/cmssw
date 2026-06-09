@@ -860,7 +860,7 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
 
     track.setBeta(beta);
     track.seteLoss(dyn_eLoss);
-    double phiB = correctedPhiB(seed);
+    double phiB = seed->phiB();
     int charge;
     if (phiB == 0)
       charge = 0;
@@ -1143,18 +1143,33 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimationPhiB(const L1MuKBMTrack& track){
     int currBX = stub_bxs[i];
     if (currBX == -99) continue;
 
+    double betaEst = 0;
+
     for (int j = i + 1; j <= 3; ++j){
       int nextBX = stub_bxs[j];
       if (nextBX == -99) continue;
 
       double diffBX = std::abs(nextBX - currBX);
 
+      if (diffBX == 0){
+        validBetaEstimation.push_back(1.0);
+        break;
+      }
+
       double phiB = PhiBColl[i];
       double phiBp1 = PhiBColl[j];
 
-      if (std::abs(phiBp1 - phiB) < 0.0001) continue;
+      if (phiB == 0 || phiBp1 == 0){
+        validBetaEstimation.push_back(1);
+        break;
+      }
 
-      double betaEst = sqrt(std::abs(diffBX/2 * (phiB*phiBp1)/(phiBp1 - phiB)));
+      double K = initK_[i] * phiB / (1 + initK2_[i] * std::abs(phiB));
+      double Kp1 = initK_[j] * phiBp1 / (1 + initK2_[j] * std::abs(phiBp1));
+
+      if (std::abs(K - Kp1) < 0.0001) continue;
+
+      betaEst = sqrt(std::abs(diffBX/2 * (K*Kp1)/(Kp1 - K)));
 
       if(betaEst > 1.0) betaEst = 1.0;
 
@@ -1175,11 +1190,14 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimationPhiB(const L1MuKBMTrack& track){
 
   double finalBeta = sumBeta / validBetaEstimation.size();
 
-  std::cout << "[" << stub_bxs[0] << "," << stub_bxs[1] << "," << stub_bxs[2] << "," << stub_bxs[3] << "], " << " [" << PhiBColl[0] << "," << PhiBColl[1] << "," << PhiBColl[2] << "," << PhiBColl[3] << "], " << finalBeta << std::endl;
+  // if(finalBeta != 1){
 
-  for(double b : validBetaEstimation){
-    std::cout << b << std::endl;
-  }
+  //   std::cout << "[" << stub_bxs[0] << "," << stub_bxs[1] << "," << stub_bxs[2] << "," << stub_bxs[3] << "], " << " [" << PhiBColl[0] << "," << PhiBColl[1] << "," << PhiBColl[2] << "," << PhiBColl[3] << "], " << finalBeta << std::endl;
+
+  //   for(double b : validBetaEstimation){
+  //     std::cout << b << std::endl;
+  //   }
+  // }
 
   return finalBeta;
 
@@ -1195,10 +1213,17 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1Mu
   float beta = 1.0;
 
   std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
+  // if (!firstChain.first) return firstChain;
 
-  double test = BetaEstimationPhiB(firstChain.second);
+  // beta = BetaEstimationPhiB(firstChain.second);
+  // double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
+
+  // std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
 
   return firstChain;
+
+
+
   // if (!firstChain.first) return firstChain;
 
   // //Define the beta values for given BX spread hypothesis

@@ -78,6 +78,7 @@ int L1MuKBMTrack::rank() const { return rank_; }
 const L1MuKBMTCombinedStubRefVector& L1MuKBMTrack::stubs() const { return stubs_; }
 
 int L1MuKBMTrack::residual(uint i) const { return residuals_[i]; }
+//const std::vector<int>& residualVector() const { return residuals_; }
 
 void L1MuKBMTrack::setCoordinates(int step, double curv, int phi, double phiB) {
   step_ = step;

@@ -94,12 +94,16 @@ public:
 
   //get Kalman gain
   const std::vector<float>& kalmanGain(unsigned int) const;
+  
+  //const std::vector<float>& similarityMatrix(unsigned int) const;
+
 
   //get covariance
   const std::vector<double>& covariance() const;
 
   //get residual
   int residual(uint) const;
+  const std::vector<int>& residualVector() const { return residuals_; }
 
   //check ogverlap
   bool overlapTrack(const L1MuKBMTrack&) const;

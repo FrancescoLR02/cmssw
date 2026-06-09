@@ -101,13 +101,10 @@ ConverterKbmtfTracksToFlatTable::~ConverterKbmtfTracksToFlatTable() {
   // (e.g. close files, deallocate resources etc.)
 }
 
-
 // ----------------------- method called for each orbit  -----------------------
 void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   edm::Handle<BXVector<L1MuKBMTrack>> src;
   iEvent.getByToken(src_, src);
-  //auto out = std::make_unique<nanoaod::FlatTable>(1, name_, false, false);
-  //out->setDoc(doc_);
 
   int outputShiftPhi = 3;
   int outputShiftEta = 3;
@@ -116,16 +113,6 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
     outputShiftEta = 0;
   }
 
-  /*std::vector<float> pt(out->size());
-  std::vector<float> eta(out->size());
-  std::vector<float> phi(out->size());
-  std::vector<int16_t> charge(out->size());
-  std::vector<int16_t> quality(out->size());
-  std::vector<int16_t> dxy(out->size());
-  std::vector<int16_t> index(out->size());
-  std::vector<float> ptUnconstrained(out->size());
-  std::vector<float> etaAtVtx(out->size());
-  std::vector<float> phiAtVtx(out->size());*/
   std::vector<float> pt;
   std::vector<float> eta;
   std::vector<float> phi;
@@ -137,20 +124,6 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   std::vector<float> ptUnconstrained;
   std::vector<float> etaAtVtx;
   std::vector<float> phiAtVtx;
-
-  /*std::vector<int16_t> nStub(out->size());
-  std::vector<std::vector<int16_t>> sStation(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sSector(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sWheel(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sHwQual(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sHwPhi(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sHwPhiB(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sHwEta1(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sHwQEta1(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sHwEta2(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sHwQEta2(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sTag(4, std::vector<int16_t>(out->size(), 0));
-  std::vector<std::vector<int16_t>> sBx(4, std::vector<int16_t>(out->size(), 0));*/
 
   std::vector<int16_t> nStub;
 
@@ -207,28 +180,27 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   std::vector<int16_t> s4Bx;
   std::vector<double> eLoss;
   std::vector<float> beta;
+  
+  // FIX: Sized residualTrack directly from input source vector size
+  std::vector<std::vector<int>> residualTrack(4, std::vector<int>(src->size(), 0));
 
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
 
+    const std::vector<int>& currentResidual = track.residualVector();
+    for(int stat = 0; stat < 4; ++stat) {
+      residualTrack[stat][i] = currentResidual[stat];
+    }
+
     l1t::RegionalMuonCand bmtf_m = algo_->convertToBMTF(track);
-    /*pt[i] = ugmt::fPt(bmtf_m.hwPt());
-    eta[i] = ugmt::fEta(bmtf_m.hwEta());
-    phi[i] = ugmt::fPhi(calcGlobalPhi(bmtf_m));
-    charge[i] = bmtf_m.hwSign()==1? -1 : 1;
-    quality[i] = bmtf_m.hwQual();
-    dxy[i] = track.dxy();
-    index[i] = bmtf_m.processor(); // wrong for now
-    ptUnconstrained[i] = ugmt::fPtUnconstrained(bmtf_m.hwPtUnconstrained());*/
     pt.push_back(ugmt::fPt(bmtf_m.hwPt()));
     eta.push_back(ugmt::fEta(bmtf_m.hwEta()));
     phi.push_back(ugmt::fPhi(calcGlobalPhi(bmtf_m)));
     charge.push_back(bmtf_m.hwSign()==1? -1 : 1);
     quality.push_back(bmtf_m.hwQual());
-    //dxy.push_back(track.dxy()); // Do we need this quantity?
     dxy.push_back(bmtf_m.hwDXY());
     curvature.push_back(bmtf_m.hwK());
-    index.push_back(bmtf_m.processor()); // wrong for now
+    index.push_back(bmtf_m.processor()); 
     ptUnconstrained.push_back(ugmt::fPtUnconstrained(bmtf_m.hwPtUnconstrained()));
 
     int ptRedInWidth = m_BPhiExtrapolation_->getPtRedInWidth();
@@ -236,14 +208,12 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
     int etaRedInWidth = m_BPhiExtrapolation_->getEtaRedInWidth();
     int redEtaShift = 8 - etaRedInWidth;
 
-    // only use LSBs of pt:
     int ptRed = bmtf_m.hwPt() & ptMask;
-    // here we drop the LSBs and mask the MSB
     int etaAbsRed = (std::abs(bmtf_m.hwEta()) >> redEtaShift) & ((1 << etaRedInWidth) - 1);
     int deltaPhi = 0;
     int deltaEta = 0;
 
-    if (bmtf_m.hwPt() < (1 << ptRedInWidth)) {  // extrapolation only for "low" pT muons
+    if (bmtf_m.hwPt() < (1 << ptRedInWidth)) {  
       int sign = 1;
       if (bmtf_m.hwSign() == 1) {
         sign = -1;
@@ -255,37 +225,17 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
       }
     }
 
-    /*etaAtVtx[i] = ugmt::fEta(bmtf_m.hwEta() + deltaEta);
-    phiAtVtx[i] = ugmt::fPhi(calcGlobalPhi(bmtf_m) + deltaPhi);*/
-
     etaAtVtx.push_back(ugmt::fEta(bmtf_m.hwEta() + deltaEta));
     phiAtVtx.push_back(ugmt::fPhi(calcGlobalPhi(bmtf_m) + deltaPhi));
     eLoss.push_back(track.eLoss());
     beta.push_back(track.beta());
 
     if (addStubs_) {
-      /*nStub[i] = track.stubs().size();
-      unsigned j = 0;
-      for (const auto& stub : track.stubs()) {
-        sStation[j][i] = (*stub).stNum();
-        sSector[j][i] = (*stub).scNum();
-        sWheel[j][i] = (*stub).whNum();
-        sHwQual[j][i] = (*stub).quality();
-        sHwPhi[j][i] = (*stub).phi();
-        sHwPhiB[j][i] = (*stub).phiB();
-        sHwEta1[j][i] = (*stub).eta1();
-        sHwQEta1[j][i] = (*stub).qeta1();
-        sHwEta2[j][i] = (*stub).eta2();
-        sHwQEta2[j][i] = (*stub).qeta2();
-        sTag[j][i] = (*stub).tag();
-	sBx[j][i] = (*stub).bxNum();
-        ++j;
-      }*/
       unsigned j = 0;
       nStub.push_back(track.stubs().size());
       for (const auto& stub : track.stubs()) {
-	++j;
-	if (j==1){
+        ++j;
+        if (j==1){
            s1Station.push_back((*stub).stNum());
            s1Sector.push_back((*stub).scNum());
            s1Wheel.push_back((*stub).whNum());
@@ -298,8 +248,8 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
            s1HwQEta2.push_back((*stub).qeta2());
            s1Tag.push_back((*stub).tag());
            s1Bx.push_back((*stub).bxNum());
-	}
-	if (j==2){
+        }
+        if (j==2){
            s2Station.push_back((*stub).stNum());
            s2Sector.push_back((*stub).scNum());
            s2Wheel.push_back((*stub).whNum());
@@ -313,7 +263,7 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
            s2Tag.push_back((*stub).tag());
            s2Bx.push_back((*stub).bxNum());
         }
-	if (j==3){
+        if (j==3){
            s3Station.push_back((*stub).stNum());
            s3Sector.push_back((*stub).scNum());
            s3Wheel.push_back((*stub).whNum());
@@ -327,7 +277,7 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
            s3Tag.push_back((*stub).tag());
            s3Bx.push_back((*stub).bxNum());
         }
-	if (j==4){
+        if (j==4){
            s4Station.push_back((*stub).stNum());
            s4Sector.push_back((*stub).scNum());
            s4Wheel.push_back((*stub).whNum());
@@ -343,7 +293,7 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
         }
       }
       if (track.stubs().size()<4){
-	s4Station.push_back(-1);
+        s4Station.push_back(-1);
         s4Sector.push_back(-1);
         s4Wheel.push_back(-1);
         s4HwQual.push_back(-1);
@@ -394,70 +344,29 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
 
   if (addStubs_) {
     out->addColumn<int16_t>("nStub", nStub, "number of stubs used to reconstruct KBMTF track");
-    /*for (int i=0; i<4; ++i) {
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"Station", sStation[i], "stub station");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"Sector", sSector[i], "stub sector");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"Wheel", sWheel[i], "stub wheel");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwQual", sHwQual[i], "stub quality (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwPhi", sHwPhi[i], "stub local phi position (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwPhiB", sHwPhiB[i], "stub phi bending (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwEta1", sHwEta1[i], "eta of first stub in chamber (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwQEta1", sHwQEta1[i], "eta quality of first stub in chamber (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwEta2", sHwEta2[i], "eta of second stub in chamber (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwQEta2", sHwQEta2[i], "eta quality of second stub in chamber (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"Tag", sTag[i], "tag=0 is for second stub in chamber");
-	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"Bx", sBx[i], "bx");
-    }*/
+    out->addColumn<double>("s1TrackResidual", residualTrack[0], "Residual in each station");
+    out->addColumn<double>("s2TrackResidual", residualTrack[1], "Residual in each station");
+    out->addColumn<double>("s3TrackResidual", residualTrack[2], "Residual in each station");
+    out->addColumn<double>("s4TrackResidual", residualTrack[3], "Residual in each station");
+
     out->addColumn<int16_t>("s1Station", s1Station, "stub station");
     out->addColumn<int16_t>("s1Sector", s1Sector, "stub sector");
     out->addColumn<int16_t>("s1Wheel", s1Wheel, "stub wheel");
-    /*out->addColumn<int16_t>("s1HwQual", s1HwQual, "stub quality (hw units)");
-    out->addColumn<int16_t>("s1HwPhi", s1HwPhi, "stub local phi position (hw units)");
-    out->addColumn<int16_t>("s1HwPhiB", s1HwPhiB, "stub phi bending (hw units)");
-    out->addColumn<int16_t>("s1HwEta1", s1HwEta1, "eta of first stub in chamber (hw units)");
-    out->addColumn<int16_t>("s1HwQEta1", s1HwQEta1, "eta quality of first stub in chamber (hw units)");
-    out->addColumn<int16_t>("s1HwEta2", s1HwEta2, "eta of second stub in chamber (hw units)");
-    out->addColumn<int16_t>("s1HwQEta2", s1HwQEta2, "eta quality of second stub in chamber (hw units)");
-    out->addColumn<int16_t>("s1Tag", s1Tag, "tag=0 is for second stub in chamber");*/
     out->addColumn<int16_t>("s1Bx", s1Bx, "bx");
 
     out->addColumn<int16_t>("s2Station", s2Station, "stub station");
     out->addColumn<int16_t>("s2Sector", s2Sector, "stub sector");
     out->addColumn<int16_t>("s2Wheel", s2Wheel, "stub wheel");
-    /*out->addColumn<int16_t>("s2HwQual", s2HwQual, "stub quality (hw units)");
-    out->addColumn<int16_t>("s2HwPhi", s2HwPhi, "stub local phi position (hw units)");
-    out->addColumn<int16_t>("s2HwPhiB", s2HwPhiB, "stub phi bending (hw units)");
-    out->addColumn<int16_t>("s2HwEta1", s2HwEta1, "eta of first stub in chamber (hw units)");
-    out->addColumn<int16_t>("s2HwQEta1", s2HwQEta1, "eta quality of first stub in chamber (hw units)");
-    out->addColumn<int16_t>("s2HwEta2", s2HwEta2, "eta of second stub in chamber (hw units)");
-    out->addColumn<int16_t>("s2HwQEta2", s2HwQEta2, "eta quality of second stub in chamber (hw units)");
-    out->addColumn<int16_t>("s2Tag", s2Tag, "tag=0 is for second stub in chamber");*/
     out->addColumn<int16_t>("s2Bx", s2Bx, "bx");
 
     out->addColumn<int16_t>("s3Station", s3Station, "stub station");
     out->addColumn<int16_t>("s3Sector", s3Sector, "stub sector");
     out->addColumn<int16_t>("s3Wheel", s3Wheel, "stub wheel");
-    /*out->addColumn<int16_t>("s3HwQual", s3HwQual, "stub quality (hw units)");
-    out->addColumn<int16_t>("s3HwPhi", s3HwPhi, "stub local phi position (hw units)");
-    out->addColumn<int16_t>("s3HwPhiB", s3HwPhiB, "stub phi bending (hw units)");
-    out->addColumn<int16_t>("s3HwEta1", s3HwEta1, "eta of first stub in chamber (hw units)");
-    out->addColumn<int16_t>("s3HwQEta1", s3HwQEta1, "eta quality of first stub in chamber (hw units)");
-    out->addColumn<int16_t>("s3HwEta2", s3HwEta2, "eta of second stub in chamber (hw units)");
-    out->addColumn<int16_t>("s3HwQEta2", s3HwQEta2, "eta quality of second stub in chamber (hw units)");
-    out->addColumn<int16_t>("s3Tag", s3Tag, "tag=0 is for second stub in chamber");*/
     out->addColumn<int16_t>("s3Bx", s3Bx, "bx");
 
     out->addColumn<int16_t>("s4Station", s4Station, "stub station");
     out->addColumn<int16_t>("s4Sector", s4Sector, "stub sector");
     out->addColumn<int16_t>("s4Wheel", s4Wheel, "stub wheel");
-    /*out->addColumn<int16_t>("s4HwQual", s4HwQual, "stub quality (hw units)");
-    out->addColumn<int16_t>("s4HwPhi", s4HwPhi, "stub local phi position (hw units)");
-    out->addColumn<int16_t>("s4HwPhiB", s4HwPhiB, "stub phi bending (hw units)");
-    out->addColumn<int16_t>("s4HwEta1", s4HwEta1, "eta of first stub in chamber (hw units)");
-    out->addColumn<int16_t>("s4HwQEta1", s4HwQEta1, "eta quality of first stub in chamber (hw units)");
-    out->addColumn<int16_t>("s4HwEta2", s4HwEta2, "eta of second stub in chamber (hw units)");
-    out->addColumn<int16_t>("s4HwQEta2", s4HwQEta2, "eta quality of second stub in chamber (hw units)");
-    out->addColumn<int16_t>("s4Tag", s4Tag, "tag=0 is for second stub in chamber");*/
     out->addColumn<int16_t>("s4Bx", s4Bx, "bx");
   }
 
