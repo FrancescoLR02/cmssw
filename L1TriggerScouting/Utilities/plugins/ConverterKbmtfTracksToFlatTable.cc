@@ -181,14 +181,18 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   std::vector<double> eLoss;
   std::vector<float> beta;
   
+  
   std::vector<std::vector<double>> residualTrack(4, std::vector<double>(src->size(), 0));
+  std::vector<std::vector<int>> residualTrackPhi(4, std::vector<int>(src->size(), 0));
 
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
 
     const std::vector<double>& currentResidual = track.innovationVector();
+    const std::vector<int>& currentPhiResidual = track.innovationPhiVector();
     for(int stat = 0; stat < 4; ++stat) {
       residualTrack[stat][i] = currentResidual[stat];
+      residualTrackPhi[stat][i] = currentPhiResidual[stat];
     }
 
     l1t::RegionalMuonCand bmtf_m = algo_->convertToBMTF(track);
@@ -347,6 +351,12 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
     out->addColumn<double>("s2TrackResidual", residualTrack[1], "Residual in each station");
     out->addColumn<double>("s3TrackResidual", residualTrack[2], "Residual in each station");
     out->addColumn<double>("s4TrackResidual", residualTrack[3], "Residual in each station");
+
+
+    out->addColumn<double>("s1TrackPhiResidual", residualTrackPhi[0], "Residual Phi in each station");
+    out->addColumn<double>("s2TrackPhiResidual", residualTrackPhi[1], "Residual Phi in each station");
+    out->addColumn<double>("s3TrackPhiResidual", residualTrackPhi[2], "Residual Phi in each station");
+    out->addColumn<double>("s4TrackPhiResidual", residualTrackPhi[3], "Residual Phi in each station");
 
     out->addColumn<int16_t>("s1Station", s1Station, "stub station");
     out->addColumn<int16_t>("s1Sector", s1Sector, "stub sector");

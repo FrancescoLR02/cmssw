@@ -463,6 +463,7 @@ bool L1TMuonBarrelKalmanAlgo::update(L1MuKBMTrack& track, const L1MuKBMTCombined
       return updateOffline(track, stub);
     else
       return updateOffline1D(track, stub);
+    //return updateOffline(track, stub);
 
   } else
     return updateLUT(track, stub, mask, seedQual);
@@ -480,8 +481,6 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline(L1MuKBMTrack& track, const L1MuKBMTC
   residual[0] = phi - trackPhi;
   residual[1] = phiB - trackPhiB;
 
-  
-  track.setInnovationPhiB(stub->stNum() - 1, (residual[1]) / 8.0);
 
   Matrix23 H;
   H(0, 0) = 0.0;
@@ -507,6 +506,10 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline(L1MuKBMTrack& track, const L1MuKBMTC
   if (!S.Invert())
     return false;
   Matrix32 Gain = cov * ROOT::Math::Transpose(H) * S;
+  
+  
+  track.setInnovationPhiB(stub->stNum() - 1, fabs(residual[1]) / 8.0);
+  track.setInnovationPhi(stub->stNum() - 1, fabs(residual[0]));
 
   track.setKalmanGain(track.step(), fabs(trackK), Gain(0, 0), Gain(0, 1), Gain(1, 0), Gain(1, 1), Gain(2, 0), Gain(2, 1));
 
@@ -522,9 +525,6 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline(L1MuKBMTrack& track, const L1MuKBMTC
   double phiBNew = trackPhiB + Gain(2, 0) * residual(0) + Gain(2, 1) * residual(1);
 
   track.setResidual(stub->stNum() - 1, fabs(phi - phiNew) + fabs(phiB - phiBNew) / 8);
-
-
-  
 
   if (verbose_) {
     printf("residual %d - %d = %d %f - %f = %f\n", phi, trackPhi, int(residual[0]), phiB, trackPhiB, residual[1]);
@@ -584,6 +584,7 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline1D(L1MuKBMTrack& track, const L1MuKBM
   if (S == 0.0)
     return false;
   Matrix31 Gain = cov * ROOT::Math::Transpose(H) / S;
+  track.setInnovationPhi(stub->stNum() - 1, fabs(residual));
 
   track.setKalmanGain(track.step(), fabs(trackK), Gain(0, 0), 0.0, Gain(1, 0), 0.0, Gain(2, 0), 0.0);
   if (verbose_)
@@ -1102,7 +1103,7 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
   double beta = deltaR * std::cosh(track.eta()) / (c * spreadTime);
 
   if (beta > 1.0) return 1.0;
-  //if (beta < 0.2) return 0.2;
+  if (beta < 0.2) return 0.2;
 
   return beta;
 }
@@ -1215,8 +1216,6 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimationPhiB(const L1MuKBMTrack& track){
 }
 
 
-
-
 std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef &seed, const L1MuKBMTCombinedStubRefVector& stubs, int bx){
 
   //Start with a first pass chain
@@ -1224,30 +1223,19 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1Mu
   float beta = 1.0;
 
   std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
-  // if (!firstChain.first) return firstChain;
+  if (!firstChain.first) return firstChain;
 
-  // beta = BetaEstimationPhiB(firstChain.second);
-  // double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
+  //Define the beta values for given BX spread hypothesis
+  beta = BetaEstimation(firstChain.second);
 
-  // std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
+  //Define new eLoss term proportional to the original value scaled by 1/beta^2
+  double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
 
-  return firstChain;
+  //run again the chain with the new eLoss hypostesis
+  std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
 
-
-
-  // if (!firstChain.first) return firstChain;
-
-  // //Define the beta values for given BX spread hypothesis
-  // beta = BetaEstimation(firstChain.second);
-
-  // //Define new eLoss term proportional to the original value scaled by 1/beta^2
-  // double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
-
-  // //run again the chain with the new eLoss hypostesis
-  // std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
-
-  // //output the newly computed track
-  // return secondChain;
+  //output the newly computed track
+  return secondChain;
 }
 
 

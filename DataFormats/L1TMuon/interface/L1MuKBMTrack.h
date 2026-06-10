@@ -105,6 +105,8 @@ public:
   int residual(uint) const;
   const std::vector<int>& residualVector() const { return residuals_; }
   const std::vector<double>& innovationVector() const { return innovations_; }
+  const std::vector<int>& innovationPhiVector() const { return innovationsPhi_; }
+
 
 
 
@@ -182,6 +184,7 @@ public:
   //set residual
   void setResidual(uint, int);
   void setInnovationPhiB(uint, double);
+  void setInnovationPhi(uint, int);
 
 private:
   //Covariance matrix for studies
@@ -263,6 +266,7 @@ private:
 
   std::vector<int> residuals_;
   std::vector<double> innovations_;
+  std::vector<int> innovationsPhi_;
 };
 
 #endif
