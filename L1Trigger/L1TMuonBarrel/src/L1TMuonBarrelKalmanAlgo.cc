@@ -508,12 +508,12 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline(L1MuKBMTrack& track, const L1MuKBMTC
   Matrix32 Gain = cov * ROOT::Math::Transpose(H) * S;
   
   
-  track.setInnovationPhiB(stub->stNum() - 1, fabs(residual[1]) / 8.0);
-  track.setInnovationPhi(stub->stNum() - 1, fabs(residual[0]));
+  track.setInnovationPhiB(stub->stNum() - 1, residual[1] / 8.0);
+  track.setInnovationPhi(stub->stNum() - 1, residual[0]);
 
-  //compute the chi2 of the residue!
-  double chi2 = residual(0) * (Sinv(0,0)*residual(0) + Sinv(0,1)*residual(1)) + residual(1) * (Sinv(1,0)*residual(0) + Sinv(1,1)*residual(1));
-  track.setChiSquareInnov(stub->stNum(), chi2);
+  //!compute the chi2 of the residue! 
+  double chi2 = residual(0) * (S(0,0)*residual(0) + S(0,1)*residual(1)) + residual(1) * (S(1,0)*residual(0) + S(1,1)*residual(1));
+  track.setChiSquareInnov(stub->stNum() - 1, chi2);
 
   track.setKalmanGain(track.step(), fabs(trackK), Gain(0, 0), Gain(0, 1), Gain(1, 0), Gain(1, 1), Gain(2, 0), Gain(2, 1));
 
@@ -589,7 +589,7 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline1D(L1MuKBMTrack& track, const L1MuKBM
     return false;
   Matrix31 Gain = cov * ROOT::Math::Transpose(H) / S;
 
-  track.setInnovationPhi(stub->stNum() - 1, fabs(residual));
+  track.setInnovationPhi(stub->stNum() - 1, residual);
   track.setChiSquareInnov(stub->stNum() - 1, pow(residual, 2)/S);
 
   track.setKalmanGain(track.step(), fabs(trackK), Gain(0, 0), 0.0, Gain(1, 0), 0.0, Gain(2, 0), 0.0);

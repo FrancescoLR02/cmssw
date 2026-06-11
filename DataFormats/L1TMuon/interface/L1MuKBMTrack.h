@@ -186,6 +186,7 @@ public:
   void setResidual(uint, int);
   void setInnovationPhiB(uint, double);
   void setInnovationPhi(uint, int);
+  void setChiSquareInnov(uint, double);
 
 private:
   //Covariance matrix for studies
