@@ -22,8 +22,9 @@ L1MuKBMTrack::L1MuKBMTrack(const L1MuKBMTCombinedStubRef& seed, int phi, double 
   residuals_.push_back(0);
   residuals_.push_back(0);
   residuals_.push_back(0);
-  innovations_ = std::vector<double>(4,-99.);
-  innovationsPhi_ = std::vector<int>(4,-99);
+  innovations_ = std::vector<double>(4, 0);
+  innovationsPhi_ = std::vector<int>(4, 0);
+  chiSquareInnov_ = std::vector<double>(4, -99);
 }
 
 double L1MuKBMTrack::curvatureAtMuon() const { return curvMuon_; }
@@ -204,6 +205,7 @@ void L1MuKBMTrack::setKalmanGain(
 void L1MuKBMTrack::setResidual(uint i, int val) { residuals_[i] = val; }
 void L1MuKBMTrack::setInnovationPhiB(uint i, double val) { innovations_[i] = val; }
 void L1MuKBMTrack::setInnovationPhi(uint i, int val) { innovationsPhi_[i] = val; }
+void L1MuKBMTrack::setChiSquareInnov(uint i, double val) { chiSquaredInnov_[i] = val; }
 
 const std::vector<float>& L1MuKBMTrack::kalmanGain(unsigned int step) const {
   switch (step) {

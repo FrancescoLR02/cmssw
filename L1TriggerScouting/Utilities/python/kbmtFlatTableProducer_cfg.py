@@ -18,7 +18,7 @@ process = cms.Process( "DUMP", run3_2024_L1T )
 
 
 process.maxEvents = cms.untracked.PSet(
-  input = cms.untracked.int32(100_000)
+  input = cms.untracked.int32(-1)
 )
 
 process.load("FWCore.MessageService.MessageLogger_cfi")

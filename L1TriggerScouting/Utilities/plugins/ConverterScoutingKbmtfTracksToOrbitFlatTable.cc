@@ -302,13 +302,13 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"Sector", sSector[i], "stub sector");
   	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"Wheel", sWheel[i], "stub wheel");
   	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwQual", sHwQual[i], "stub quality (hw units)");
-  	  /*out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwPhi", sHwPhi[i], "stub local phi position (hw units)");
+  	  //out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwPhi", sHwPhi[i], "stub local phi position (hw units)");
   	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwPhiB", sHwPhiB[i], "stub phi bending (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwEta1", sHwEta1[i], "eta of first stub in chamber (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwQEta1", sHwQEta1[i], "eta quality of first stub in chamber (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwEta2", sHwEta2[i], "eta of second stub in chamber (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwQEta2", sHwQEta2[i], "eta quality of second stub in chamber (hw units)");
-  	  out->addColumn<int16_t>("s"+std::to_string(i+1)+"Tag", sTag[i], "tag=0 is for second stub in chamber");*/
+  	  // out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwEta1", sHwEta1[i], "eta of first stub in chamber (hw units)");
+  	  // out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwQEta1", sHwQEta1[i], "eta quality of first stub in chamber (hw units)");
+  	  // out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwEta2", sHwEta2[i], "eta of second stub in chamber (hw units)");
+  	  // out->addColumn<int16_t>("s"+std::to_string(i+1)+"HwQEta2", sHwQEta2[i], "eta quality of second stub in chamber (hw units)");
+  	  //out->addColumn<int16_t>("s"+std::to_string(i+1)+"Tag", sTag[i], "tag=0 is for second stub in chamber");
 	    out->addColumn<int16_t>("s"+std::to_string(i+1)+"Bx", sBx[i], "bx");
       out->addColumn<double>("s" + std::to_string(i+1) + "TrackPhiB", phiBTrack[i], "propagated/updated phiB from KF track");
       out->addColumn<double>("s" + std::to_string(i+1) + "TrackResidual", residualTrack[i], "Residual PhiB in each station");

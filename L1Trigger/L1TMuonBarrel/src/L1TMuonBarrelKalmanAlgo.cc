@@ -511,6 +511,10 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline(L1MuKBMTrack& track, const L1MuKBMTC
   track.setInnovationPhiB(stub->stNum() - 1, fabs(residual[1]) / 8.0);
   track.setInnovationPhi(stub->stNum() - 1, fabs(residual[0]));
 
+  //compute the chi2 of the residue!
+  double chi2 = residual(0) * (Sinv(0,0)*residual(0) + Sinv(0,1)*residual(1)) + residual(1) * (Sinv(1,0)*residual(0) + Sinv(1,1)*residual(1));
+  track.setChiSquareInnov(stub->stNum(), chi2);
+
   track.setKalmanGain(track.step(), fabs(trackK), Gain(0, 0), Gain(0, 1), Gain(1, 0), Gain(1, 1), Gain(2, 0), Gain(2, 1));
 
   double KNew = (trackK + Gain(0, 0) * residual(0) + Gain(0, 1) * residual(1));
@@ -584,7 +588,9 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline1D(L1MuKBMTrack& track, const L1MuKBM
   if (S == 0.0)
     return false;
   Matrix31 Gain = cov * ROOT::Math::Transpose(H) / S;
+
   track.setInnovationPhi(stub->stNum() - 1, fabs(residual));
+  track.setChiSquareInnov(stub->stNum() - 1, pow(residual, 2)/S);
 
   track.setKalmanGain(track.step(), fabs(trackK), Gain(0, 0), 0.0, Gain(1, 0), 0.0, Gain(2, 0), 0.0);
   if (verbose_)
@@ -593,6 +599,8 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline1D(L1MuKBMTrack& track, const L1MuKBM
   double KNew = wrapAround(trackK + (Gain(0, 0) * residual), 8192);
   int phiNew = (int)wrapAround(trackPhi + residual, 8192);
   double phiBNew = wrapAround(trackPhiB + (Gain(2, 0) * residual), 4096);
+
+
   track.setCoordinates(track.step(), KNew, phiNew, phiBNew);
   Matrix33 covNew = cov - Gain * (H * cov);
   L1MuKBMTrack::CovarianceMatrix c;

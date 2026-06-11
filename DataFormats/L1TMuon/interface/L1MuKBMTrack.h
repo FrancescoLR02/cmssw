@@ -106,6 +106,7 @@ public:
   const std::vector<int>& residualVector() const { return residuals_; }
   const std::vector<double>& innovationVector() const { return innovations_; }
   const std::vector<int>& innovationPhiVector() const { return innovationsPhi_; }
+  const std::vector<double>& innovationChiSquare() const {return chiSquareInnov_; }
 
 
 
@@ -267,6 +268,7 @@ private:
   std::vector<int> residuals_;
   std::vector<double> innovations_;
   std::vector<int> innovationsPhi_;
+  std::vector<double> chiSquareInnov_;
 };
 
 #endif

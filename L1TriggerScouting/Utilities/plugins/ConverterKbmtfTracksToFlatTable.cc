@@ -362,21 +362,26 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
     out->addColumn<int16_t>("s1Sector", s1Sector, "stub sector");
     out->addColumn<int16_t>("s1Wheel", s1Wheel, "stub wheel");
     out->addColumn<int16_t>("s1Bx", s1Bx, "bx");
+    out->addColumn<int16_t>("s1PhiB", s1HwPhiB, "S1PhiB");
+
 
     out->addColumn<int16_t>("s2Station", s2Station, "stub station");
     out->addColumn<int16_t>("s2Sector", s2Sector, "stub sector");
     out->addColumn<int16_t>("s2Wheel", s2Wheel, "stub wheel");
     out->addColumn<int16_t>("s2Bx", s2Bx, "bx");
+    out->addColumn<int16_t>("s2PhiB", s2HwPhiB, "S2PhiB");
 
     out->addColumn<int16_t>("s3Station", s3Station, "stub station");
     out->addColumn<int16_t>("s3Sector", s3Sector, "stub sector");
     out->addColumn<int16_t>("s3Wheel", s3Wheel, "stub wheel");
     out->addColumn<int16_t>("s3Bx", s3Bx, "bx");
+    out->addColumn<int16_t>("s3PhiB", s3HwPhiB, "S3PhiB");
 
     out->addColumn<int16_t>("s4Station", s4Station, "stub station");
     out->addColumn<int16_t>("s4Sector", s4Sector, "stub sector");
     out->addColumn<int16_t>("s4Wheel", s4Wheel, "stub wheel");
     out->addColumn<int16_t>("s4Bx", s4Bx, "bx");
+    out->addColumn<int16_t>("s4PhiB", s4HwPhiB, "S4PhiB");
   }
 
   iEvent.put(std::move(out));
