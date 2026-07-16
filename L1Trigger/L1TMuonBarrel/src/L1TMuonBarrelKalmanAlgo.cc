@@ -1231,10 +1231,14 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1Mu
   float beta = 1.0;
 
   std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
+
+//  return firstChain;
   if (!firstChain.first) return firstChain;
 
   //Define the beta values for given BX spread hypothesis
   beta = BetaEstimation(firstChain.second);
+
+  if (beta == 1.) return firstChain;
 
   //Define new eLoss term proportional to the original value scaled by 1/beta^2
   double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
@@ -1546,18 +1550,17 @@ int L1TMuonBarrelKalmanAlgo::fp_product(float a, int b, uint bits) {
   return (long((a * (1 << bits)) * b)) >> bits;
 }
 
+
+//Corrected the missalignment
 double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
   int charge = (K >= 0) ? +1 : -1;
   float lsb = 1.25 / float(1 << 13);
-  
-  
+
+  K = K - charge * (1.23e-03 / lsb);
+
   double FK = fabs(K);
 
-  //Maximum pT: 2500GeV
-  if (FK < 13) FK = 13.;
-
-
-
+  if (FK < 8) FK = 8.;
   if (FK > 2047)
     FK = 2047.;
 
@@ -1565,8 +1568,6 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
 
   //step 1 -material and B-field
   FK = .8569 * FK / (1.0 + 0.1144 * FK);
-  //step 2 - misalignment
-  FK = FK - charge * 1.23e-03;
   //Get to BMTF scale
   FK = FK / 1.17;
 
@@ -1574,14 +1575,41 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
   if (FK != 0)
     pt = 2.0 / FK;
 
-  // if (pt > 511)
-  //   pt = 511;
-
   if (pt < 8)
     pt = 8;
 
   return pt;
 }
+
+
+// double L1TMuonBarrelKalmanAlgo::ptLUT(double K) { //FIXME was int
+//   int charge = (K >= 0) ? +1 : -1;
+//   float lsb = 1.25 / float(1 << 13);
+//   double FK = fabs(K);
+
+//   if (FK > 2047) 
+//     FK = 2047.; 
+//   if (FK < 13)
+//     FK = 13.; 
+
+//   FK = FK * lsb;
+
+//   //step 1 -material and B-field
+//   FK = .8569 * FK / (1.0 + 0.1144 * FK);
+//   //step 2 - misalignment
+//   FK = FK - charge * 1.23e-03;
+//   //Get to BMTF scale
+//   FK = FK / 1.17;
+
+//   double pt = 0;
+//   if (FK != 0)
+//     pt = 2.0 / FK;
+
+//   if (pt < 8)
+//     pt = 8;
+
+//   return pt;
+// }
 
 L1MuKBMTrackCollection L1TMuonBarrelKalmanAlgo::clean(const L1MuKBMTrackCollection& tracks, uint seed) {
   L1MuKBMTrackCollection out;

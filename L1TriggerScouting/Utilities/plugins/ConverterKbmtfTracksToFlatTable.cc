@@ -118,7 +118,7 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   std::vector<float> phi;
   std::vector<int16_t> charge;
   std::vector<int16_t> quality;
-  std::vector<int16_t> dxy;
+  std::vector<double> dxy;
   std::vector<int16_t> curvature;
   std::vector<int16_t> index;
   std::vector<float> ptUnconstrained;
@@ -180,28 +180,32 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   std::vector<int16_t> s4Bx;
   std::vector<double> eLoss;
   std::vector<float> beta;
+
   
   
   std::vector<std::vector<double>> residualTrack(4, std::vector<double>(src->size(), 0));
   std::vector<std::vector<int>> residualTrackPhi(4, std::vector<int>(src->size(), 0));
+  std::vector<std::vector<double>> innovChiSquared(4, std::vector<double>(src->size(), 0));
 
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
 
     const std::vector<double>& currentResidual = track.innovationVector();
     const std::vector<int>& currentPhiResidual = track.innovationPhiVector();
+    const std::vector<double>& currentInnovChi2 = track.innovationChiSquare();
     for(int stat = 0; stat < 4; ++stat) {
       residualTrack[stat][i] = currentResidual[stat];
       residualTrackPhi[stat][i] = currentPhiResidual[stat];
+      innovChiSquared[stat][i] = currentInnovChi2[stat];
     }
 
     l1t::RegionalMuonCand bmtf_m = algo_->convertToBMTF(track);
-    pt.push_back(ugmt::fPt(bmtf_m.hwPt()));
+    //pt.push_back(ugmt::fPt(bmtf_m.hwPt()));
     eta.push_back(ugmt::fEta(bmtf_m.hwEta()));
     phi.push_back(ugmt::fPhi(calcGlobalPhi(bmtf_m)));
     charge.push_back(bmtf_m.hwSign()==1? -1 : 1);
     quality.push_back(bmtf_m.hwQual());
-    dxy.push_back(bmtf_m.hwDXY());
+    //dxy.push_back(bmtf_m.hwDXY());
     curvature.push_back(bmtf_m.hwK());
     index.push_back(bmtf_m.processor()); 
     ptUnconstrained.push_back(ugmt::fPtUnconstrained(bmtf_m.hwPtUnconstrained()));
@@ -232,6 +236,8 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
     phiAtVtx.push_back(ugmt::fPhi(calcGlobalPhi(bmtf_m) + deltaPhi));
     eLoss.push_back(track.eLoss());
     beta.push_back(track.beta());
+    pt.push_back(track.pt());
+    dxy.push_back(fabs(track.dxy()/256.0));
 
     if (addStubs_) {
       unsigned j = 0;
@@ -357,6 +363,13 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
     out->addColumn<double>("s2TrackPhiResidual", residualTrackPhi[1], "Residual Phi in each station");
     out->addColumn<double>("s3TrackPhiResidual", residualTrackPhi[2], "Residual Phi in each station");
     out->addColumn<double>("s4TrackPhiResidual", residualTrackPhi[3], "Residual Phi in each station");
+
+
+    out->addColumn<double>("s1InnovChi2", innovChiSquared[0], "innovation in each station");
+    out->addColumn<double>("s2InnovChi2", innovChiSquared[1], "innovation in each station");
+    out->addColumn<double>("s3InnovChi2", innovChiSquared[2], "innovation in each station");
+    out->addColumn<double>("s4InnovChi2", innovChiSquared[3], "innovation in each station");
+
 
     out->addColumn<int16_t>("s1Station", s1Station, "stub station");
     out->addColumn<int16_t>("s1Sector", s1Sector, "stub sector");

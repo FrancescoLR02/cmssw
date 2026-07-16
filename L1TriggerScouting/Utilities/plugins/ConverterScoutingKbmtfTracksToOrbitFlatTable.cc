@@ -163,6 +163,7 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   //Innovation for PhiB and Phi (respectively)
   std::vector<std::vector<double>> residualTrack(4, std::vector<double>(out->size(), 0));
   std::vector<std::vector<int>> residualTrackPhi(4, std::vector<int>(out->size(), 0));
+  std::vector<std::vector<double>> innovChiSquared(4, std::vector<double>(out->size(), 0));
 
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
@@ -209,11 +210,14 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
     const std::vector<double>& currentTrackPhiBs = track.trackPhiBCollection();
     const std::vector<double>& currentResidual = track.innovationVector();
     const std::vector<int>& currentResidualPhi = track.innovationPhiVector();
+    const std::vector<double>& currentInnovChiSquared = track.innovationChiSquare();
+
 
     for(int stat = 0; stat < 4; ++stat) {
       phiBTrack[stat][i] = currentTrackPhiBs[stat];
       residualTrack[stat][i] = currentResidual[stat];
       residualTrackPhi[stat][i] = currentResidualPhi[stat];
+      innovChiSquared[stat][i] = currentInnovChiSquared[stat];
     }
 
 
@@ -313,6 +317,7 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
       out->addColumn<double>("s" + std::to_string(i+1) + "TrackPhiB", phiBTrack[i], "propagated/updated phiB from KF track");
       out->addColumn<double>("s" + std::to_string(i+1) + "TrackResidual", residualTrack[i], "Residual PhiB in each station");
       out->addColumn<int>("s" + std::to_string(i+1) + "TrackPhiResidual", residualTrackPhi[i], "Residual Phi in each station");
+      out->addColumn<double>("s" + std::to_string(i+1) + "innovChiSquared", innovChiSquared[i], "Innovation Chi Squared");
     }
   }
 
