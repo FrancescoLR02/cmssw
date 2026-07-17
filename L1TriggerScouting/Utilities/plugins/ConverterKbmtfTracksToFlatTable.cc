@@ -183,21 +183,21 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
 
   
   
-  std::vector<std::vector<double>> residualTrack(4, std::vector<double>(src->size(), 0));
-  std::vector<std::vector<int>> residualTrackPhi(4, std::vector<int>(src->size(), 0));
-  std::vector<std::vector<double>> innovChiSquared(4, std::vector<double>(src->size(), 0));
+  // std::vector<std::vector<double>> residualTrack(4, std::vector<double>(src->size(), 0));
+  // std::vector<std::vector<int>> residualTrackPhi(4, std::vector<int>(src->size(), 0));
+  // std::vector<std::vector<double>> innovChiSquared(4, std::vector<double>(src->size(), 0));
 
   unsigned int i = 0;
   for (const L1MuKBMTrack& track : *src) {
 
-    const std::vector<double>& currentResidual = track.innovationVector();
-    const std::vector<int>& currentPhiResidual = track.innovationPhiVector();
-    const std::vector<double>& currentInnovChi2 = track.innovationChiSquare();
-    for(int stat = 0; stat < 4; ++stat) {
-      residualTrack[stat][i] = currentResidual[stat];
-      residualTrackPhi[stat][i] = currentPhiResidual[stat];
-      innovChiSquared[stat][i] = currentInnovChi2[stat];
-    }
+  //   const std::vector<double>& currentResidual = track.innovationVector();
+  //   const std::vector<int>& currentPhiResidual = track.innovationPhiVector();
+  //   const std::vector<double>& currentInnovChi2 = track.innovationChiSquare();
+  //   for(int stat = 0; stat < 4; ++stat) {
+  //     residualTrack[stat][i] = currentResidual[stat];
+  //     residualTrackPhi[stat][i] = currentPhiResidual[stat];
+  //     innovChiSquared[stat][i] = currentInnovChi2[stat];
+  //   }
 
     l1t::RegionalMuonCand bmtf_m = algo_->convertToBMTF(track);
     //pt.push_back(ugmt::fPt(bmtf_m.hwPt()));
@@ -342,7 +342,7 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   out->addColumn<float>("phi", phi, "phi at second muon station (physical units)");
   out->addColumn<int16_t>("hwCharge", charge, "hwCharge (hw units)");
   out->addColumn<int16_t>("hwQual", quality, "hwQual (hw units)");
-  out->addColumn<int16_t>("hwDXY", dxy, "untruncated transverse impact parameter (hw units)");
+  out->addColumn<double>("hwDXY", dxy, "untruncated transverse impact parameter (hw units)");
   out->addColumn<int16_t>("hwK", curvature, "curvature");
   out->addColumn<int16_t>("processor", index, "processor ([0-11])");
   out->addColumn<float>("ptUnconstrained", ptUnconstrained, "pt without vertex constraint (physical units)");
@@ -352,23 +352,23 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   out->addColumn<float>("beta", beta, "bets");
 
   if (addStubs_) {
-    out->addColumn<int16_t>("nStub", nStub, "number of stubs used to reconstruct KBMTF track");
-    out->addColumn<double>("s1TrackResidual", residualTrack[0], "Residual in each station");
-    out->addColumn<double>("s2TrackResidual", residualTrack[1], "Residual in each station");
-    out->addColumn<double>("s3TrackResidual", residualTrack[2], "Residual in each station");
-    out->addColumn<double>("s4TrackResidual", residualTrack[3], "Residual in each station");
+    // out->addColumn<int16_t>("nStub", nStub, "number of stubs used to reconstruct KBMTF track");
+    // out->addColumn<double>("s1TrackResidual", residualTrack[0], "Residual in each station");
+    // out->addColumn<double>("s2TrackResidual", residualTrack[1], "Residual in each station");
+    // out->addColumn<double>("s3TrackResidual", residualTrack[2], "Residual in each station");
+    // out->addColumn<double>("s4TrackResidual", residualTrack[3], "Residual in each station");
 
 
-    out->addColumn<double>("s1TrackPhiResidual", residualTrackPhi[0], "Residual Phi in each station");
-    out->addColumn<double>("s2TrackPhiResidual", residualTrackPhi[1], "Residual Phi in each station");
-    out->addColumn<double>("s3TrackPhiResidual", residualTrackPhi[2], "Residual Phi in each station");
-    out->addColumn<double>("s4TrackPhiResidual", residualTrackPhi[3], "Residual Phi in each station");
+    // out->addColumn<double>("s1TrackPhiResidual", residualTrackPhi[0], "Residual Phi in each station");
+    // out->addColumn<double>("s2TrackPhiResidual", residualTrackPhi[1], "Residual Phi in each station");
+    // out->addColumn<double>("s3TrackPhiResidual", residualTrackPhi[2], "Residual Phi in each station");
+    // out->addColumn<double>("s4TrackPhiResidual", residualTrackPhi[3], "Residual Phi in each station");
 
 
-    out->addColumn<double>("s1InnovChi2", innovChiSquared[0], "innovation in each station");
-    out->addColumn<double>("s2InnovChi2", innovChiSquared[1], "innovation in each station");
-    out->addColumn<double>("s3InnovChi2", innovChiSquared[2], "innovation in each station");
-    out->addColumn<double>("s4InnovChi2", innovChiSquared[3], "innovation in each station");
+    // out->addColumn<double>("s1InnovChi2", innovChiSquared[0], "innovation in each station");
+    // out->addColumn<double>("s2InnovChi2", innovChiSquared[1], "innovation in each station");
+    // out->addColumn<double>("s3InnovChi2", innovChiSquared[2], "innovation in each station");
+    // out->addColumn<double>("s4InnovChi2", innovChiSquared[3], "innovation in each station");
 
 
     out->addColumn<int16_t>("s1Station", s1Station, "stub station");

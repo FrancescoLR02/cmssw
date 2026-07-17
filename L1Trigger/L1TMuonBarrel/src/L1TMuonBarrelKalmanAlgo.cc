@@ -508,12 +508,12 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline(L1MuKBMTrack& track, const L1MuKBMTC
   Matrix32 Gain = cov * ROOT::Math::Transpose(H) * S;
   
   
-  track.setInnovationPhiB(stub->stNum() - 1, residual[1] / 8.0);
-  track.setInnovationPhi(stub->stNum() - 1, residual[0]);
+  //track.setInnovationPhiB(stub->stNum() - 1, residual[1] / 8.0);
+  //track.setInnovationPhi(stub->stNum() - 1, residual[0]);
 
   //!compute the chi2 of the residue! 
-  double chi2 = residual(0) * (S(0,0)*residual(0) + S(0,1)*residual(1)) + residual(1) * (S(1,0)*residual(0) + S(1,1)*residual(1));
-  track.setChiSquareInnov(stub->stNum() - 1, chi2);
+  //double chi2 = residual(0) * (S(0,0)*residual(0) + S(0,1)*residual(1)) + residual(1) * (S(1,0)*residual(0) + S(1,1)*residual(1));
+  //track.setChiSquareInnov(stub->stNum() - 1, chi2);
 
   track.setKalmanGain(track.step(), fabs(trackK), Gain(0, 0), Gain(0, 1), Gain(1, 0), Gain(1, 1), Gain(2, 0), Gain(2, 1));
 
@@ -589,8 +589,8 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline1D(L1MuKBMTrack& track, const L1MuKBM
     return false;
   Matrix31 Gain = cov * ROOT::Math::Transpose(H) / S;
 
-  track.setInnovationPhi(stub->stNum() - 1, residual);
-  track.setChiSquareInnov(stub->stNum() - 1, pow(residual, 2)/S);
+  //track.setInnovationPhi(stub->stNum() - 1, residual);
+  //track.setChiSquareInnov(stub->stNum() - 1, pow(residual, 2)/S);
 
   track.setKalmanGain(track.step(), fabs(trackK), Gain(0, 0), 0.0, Gain(1, 0), 0.0, Gain(2, 0), 0.0);
   if (verbose_)
@@ -876,11 +876,11 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
     L1MuKBMTrack track(seed, correctedPhi(seed, seed->scNum()), correctedPhiB(seed));
 
     //Save the information about phiB in the corresponding station:
-    track.setTrackPhiB(seed->stNum(), correctedPhiB(seed));
+    //track.setTrackPhiB(seed->stNum(), correctedPhiB(seed));
 
     track.setBeta(beta);
     track.seteLoss(dyn_eLoss);
-    double phiB = seed->phiB();
+    double phiB = correctedPhiB(seed);
     int charge;
     if (phiB == 0)
       charge = 0;
@@ -1111,117 +1111,11 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
   double beta = deltaR * std::cosh(track.eta()) / (c * spreadTime);
 
   if (beta > 1.0) return 1.0;
-  if (beta < 0.2) return 0.2;
+  if (beta < 0.1) return 0.1;
 
   return beta;
 }
 
-
-
-
-double L1TMuonBarrelKalmanAlgo::BetaEstimationPhiB(const L1MuKBMTrack& track){         
-
-  int stub_bxs[4] = {-99, -99, -99, -99};
-
-  //populates array without any constraint on the ordering: compute the absolute distance between BX
-  for (const auto& stub : track.stubs()) {
-      int stNum = stub->stNum() - 1;
-      if (stNum >= 0 && stNum < 4) {
-          int bxNum = stub->bxNum();
-          
-          // If it's the first stub in this station, or if we want to handle multiple stubs:
-          if (stub_bxs[stNum] == -99) {
-              stub_bxs[stNum] = bxNum;
-          } else {
-              stub_bxs[stNum] = std::min(stub_bxs[stNum], bxNum);
-          }
-      }
-  }
-
-  //Find the actual minimum and maximum active stations
-  int minStation = -1, maxStation = -1;
-  for (int i = 0; i < 4; ++i) {
-      if (stub_bxs[i] != -99) {
-          if (minStation == -1) minStation = i; 
-          maxStation = i;                       
-      }
-  }
-
-  if (minStation == -1 || maxStation == -1 || minStation >= maxStation) {
-    return 1.0;
-  }
-
-  // Compute spread: epsilon 
-  int spreadBX = stub_bxs[maxStation] - stub_bxs[minStation];
-  if (spreadBX == 0) return 1.0;
-
-  std::vector<double> PhiBColl = track.trackPhiBCollection();
-  std::vector<double> validBetaEstimation;
-
-  //Retrieve PhiB and compute Beta
-  for (int i = 0; i < 3; ++i){
-    int currBX = stub_bxs[i];
-    if (currBX == -99) continue;
-
-    double betaEst = 0;
-
-    for (int j = i + 1; j <= 3; ++j){
-      int nextBX = stub_bxs[j];
-      if (nextBX == -99) continue;
-
-      double diffBX = std::abs(nextBX - currBX);
-
-      if (diffBX == 0){
-        validBetaEstimation.push_back(1.0);
-        break;
-      }
-
-      double phiB = PhiBColl[i];
-      double phiBp1 = PhiBColl[j];
-
-      if (phiB == 0 || phiBp1 == 0){
-        validBetaEstimation.push_back(1);
-        break;
-      }
-
-      double K = initK_[i] * phiB / (1 + initK2_[i] * std::abs(phiB));
-      double Kp1 = initK_[j] * phiBp1 / (1 + initK2_[j] * std::abs(phiBp1));
-
-      if (std::abs(K - Kp1) < 0.0001) continue;
-
-      betaEst = sqrt(std::abs(diffBX/2 * (K*Kp1)/(Kp1 - K)));
-
-      if(betaEst > 1.0) betaEst = 1.0;
-
-      validBetaEstimation.push_back(betaEst);
-
-      break;
-    }
-
-  }
-
-  //Average the value of beta
-  if(validBetaEstimation.empty()) return 1.0;
-
-  double sumBeta = 0.0;
-  for(double b : validBetaEstimation){
-    sumBeta += b;
-  }
-
-  double finalBeta = sumBeta / validBetaEstimation.size();
-
-  // if(finalBeta != 1){
-
-  //   std::cout << "[" << stub_bxs[0] << "," << stub_bxs[1] << "," << stub_bxs[2] << "," << stub_bxs[3] << "], " << " [" << PhiBColl[0] << "," << PhiBColl[1] << "," << PhiBColl[2] << "," << PhiBColl[3] << "], " << finalBeta << std::endl;
-
-  //   for(double b : validBetaEstimation){
-  //     std::cout << b << std::endl;
-  //   }
-  // }
-
-  return finalBeta;
-
-}
 
 
 std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef &seed, const L1MuKBMTCombinedStubRefVector& stubs, int bx){
@@ -1232,7 +1126,7 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1Mu
 
   std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
 
-//  return firstChain;
+  //return firstChain;
   if (!firstChain.first) return firstChain;
 
   //Define the beta values for given BX spread hypothesis
@@ -1249,65 +1143,6 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1Mu
   //output the newly computed track
   return secondChain;
 }
-
-
-//! Debug settings -------------- SAVE IN CSV THE INFORMATIONS ABOUT FIRST AND SECOND CHAIN
-// std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef &seed,
-//                                                                       const L1MuKBMTCombinedStubRefVector& stubs,
-//                                                                       int bx){
-//     // Open file
-//     static std::ofstream debugFile("iterativeChain_All.csv", std::ios::out);
-//     static bool headerWritten = false;
-//     if (!headerWritten) {
-//         debugFile << "pass,hitPattern,pt,approxChi2,eta,phi,beta,dR\n";
-//         headerWritten = true;
-//     }
-
-//     double starting_eLoss = eLoss_[0];
-//     float beta = 1.0;
-
-//     std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
-
-    
-//     // if (!firstChain.first)
-//     //     return firstChain;
-
-//     const auto& t1 = firstChain.second;
-//     beta = BetaEstimation(t1);
-
-//     double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
-
-//     // // Skip re-running if beta didn't change meaningfully
-//     // if (std::abs(beta - 1.0f) < 1e-4f) {
-//     //     debugFile << "1," << t1.hitPattern() << "," << t1.pt() << ","
-//     //               << t1.approxChi2() << "," << t1.eta() << ","
-//     //               << t1.phi() << "," << t1.beta() << ",0\n";
-//     //     return firstChain;
-//     // }
-
-//     std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
-//     const auto& t2 = secondChain.second;
-
-//     // Compute deltaR inline
-//     double dEta = t1.eta() - t2.eta();
-//     double dPhi = t1.phi() - t2.phi();
-//     // wrap dPhi to [-pi, pi]
-//     while (dPhi >  M_PI) dPhi -= 2 * M_PI;
-//     while (dPhi < -M_PI) dPhi += 2 * M_PI;
-//     double dR = std::sqrt(dEta * dEta + dPhi * dPhi);
-
-//         debugFile << "1," << t1.hitPattern() << "," << t1.pt() << ","
-//                   << t1.approxChi2() << "," << t1.eta() << ","
-//                   << t1.phi() << "," << t1.beta() << "," << dR << "\n";
-//         debugFile << "2," << t2.hitPattern() << "," << t2.pt() << ","
-//                   << t2.approxChi2() << "," << t2.eta() << ","
-//                   << t2.phi() << "," << t2.beta() << "," << dR << "\n";
-
-
-//     return secondChain;
-// }
-
-
 
 
 bool L1TMuonBarrelKalmanAlgo::estimateChiSquare(L1MuKBMTrack& track) {
