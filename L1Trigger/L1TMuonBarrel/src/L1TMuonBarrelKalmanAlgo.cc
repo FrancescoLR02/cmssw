@@ -459,11 +459,11 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
 bool L1TMuonBarrelKalmanAlgo::update(L1MuKBMTrack& track, const L1MuKBMTCombinedStubRef& stub, int mask, int seedQual) {
   updateEta(track, stub);
   if (useOfflineAlgo_) {
-    if (mask == 3 || mask == 5 || mask == 9 || mask == 6 || mask == 10 || mask == 12)
-      return updateOffline(track, stub);
-    else
-      return updateOffline1D(track, stub);
-    //return updateOffline(track, stub);
+    // if (mask == 3 || mask == 5 || mask == 9 || mask == 6 || mask == 10 || mask == 12)
+    //   return updateOffline(track, stub);
+    // else
+    //   return updateOffline1D(track, stub);
+    return updateOffline(track, stub);
 
   } else
     return updateLUT(track, stub, mask, seedQual);
@@ -1111,7 +1111,7 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
   double beta = deltaR * std::cosh(track.eta()) / (c * spreadTime);
 
   if (beta > 1.0) return 1.0;
-  if (beta < 0.1) return 0.1;
+  if (beta < 0.15) return 0.15;
 
   return beta;
 }
@@ -1126,7 +1126,7 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1Mu
 
   std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
 
-  //return firstChain;
+//  return firstChain;
   if (!firstChain.first) return firstChain;
 
   //Define the beta values for given BX spread hypothesis
@@ -1385,6 +1385,33 @@ int L1TMuonBarrelKalmanAlgo::fp_product(float a, int b, uint bits) {
   return (long((a * (1 << bits)) * b)) >> bits;
 }
 
+//as Cécile does
+// double L1TMuonBarrelKalmanAlgo::ptLUT(double oldK) {
+//   double K = oldK-8.061;
+//   if (K==0) K=1;
+//   double lsb = 1.25 / double(1 << 13);
+//   double FK = abs(K);
+
+//   if (FK > 2047)
+//     FK = 2047.;
+
+//   FK = FK * lsb;
+
+//   //step 1 -material and B-field
+//   FK = .8569 * FK / (1.0 + 0.1144 * FK);
+
+//   double pt = 0;
+//   if (FK != 0)
+//     pt = double(2.0 / FK);
+
+//   if (pt > 2000)
+//     pt = 2000;
+
+//   if (pt < 8)
+//     pt = 8;
+
+//   return pt;
+// }
 
 //Corrected the missalignment
 double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
@@ -1395,7 +1422,7 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
 
   double FK = fabs(K);
 
-  if (FK < 8) FK = 8.;
+  if (FK < 8) FK = 8;
   if (FK > 2047)
     FK = 2047.;
 
