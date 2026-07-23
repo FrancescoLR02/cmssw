@@ -1438,7 +1438,7 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
 
   double FK = fabs(K);
 
-  if (FK < 6) FK = 6;
+  if (FK < 2) FK = 2;
   if (FK > 2047)
     FK = 2047.;
 

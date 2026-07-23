@@ -206,7 +206,7 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
     charge.push_back(bmtf_m.hwSign()==1? -1 : 1);
     quality.push_back(bmtf_m.hwQual());
     //dxy.push_back(bmtf_m.hwDXY());
-    curvature.push_back(bmtf_m.hwK());
+    //curvature.push_back(bmtf_m.hwK());
     index.push_back(bmtf_m.processor()); 
     ptUnconstrained.push_back(ugmt::fPtUnconstrained(bmtf_m.hwPtUnconstrained()));
 
@@ -235,6 +235,7 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
     etaAtVtx.push_back(ugmt::fEta(bmtf_m.hwEta() + deltaEta));
     phiAtVtx.push_back(ugmt::fPhi(calcGlobalPhi(bmtf_m) + deltaPhi));
     eLoss.push_back(track.eLoss());
+    curvature.push_back(track.curvatureAtVertex());
     beta.push_back(track.beta());
     pt.push_back(track.pt());
     dxy.push_back(fabs(track.dxy()/256.0));
@@ -343,7 +344,7 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   out->addColumn<int16_t>("hwCharge", charge, "hwCharge (hw units)");
   out->addColumn<int16_t>("hwQual", quality, "hwQual (hw units)");
   out->addColumn<double>("hwDXY", dxy, "untruncated transverse impact parameter (hw units)");
-  out->addColumn<int16_t>("hwK", curvature, "curvature");
+  out->addColumn<double>("hwK", curvature, "curvature");
   out->addColumn<int16_t>("processor", index, "processor ([0-11])");
   out->addColumn<float>("ptUnconstrained", ptUnconstrained, "pt without vertex constraint (physical units)");
   out->addColumn<float>("etaAtVtx", etaAtVtx, "eta re-extrapolated at vertex (physical units)");

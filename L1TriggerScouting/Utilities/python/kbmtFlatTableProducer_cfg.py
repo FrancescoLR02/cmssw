@@ -11,6 +11,7 @@ options = VarParsing.VarParsing ('analysis')
 #selbx = "Stubs3BxWindowWheelCond"
 #selbx = "DoubleMuPt0Qual8"
 selbx = ""
+Iter = True
 
 options.parseArguments()
 
@@ -79,7 +80,7 @@ bmtfKalmanTrackingSettings = cms.PSet(
   pointResolutionPhiBH = cms.vdouble(151., 173., 155., 153.),
   pointResolutionPhiBL = cms.vdouble(17866., 19306., 23984., 23746.),
   pointResolutionVertex = cms.double(1.),
-  Iterative = cms.bool(True),
+  Iterative = cms.bool(Iter),
 
 
   useNewQualityCalculation = cms.bool(False),
@@ -133,7 +134,7 @@ bmtfKalmanTrackingOfflineSettings = cms.PSet(
   pointResolutionPhiBH = cms.vdouble(151., 173., 155., 153.),
   pointResolutionPhiBL = cms.vdouble(17866., 19306., 23984., 23746.),
   pointResolutionVertex = cms.double(1.),
-  Iterative = cms.bool(True),
+  Iterative = cms.bool(Iter),
 
 
   useNewQualityCalculation = cms.bool(False),
