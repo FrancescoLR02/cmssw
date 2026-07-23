@@ -147,6 +147,7 @@ private:
   double pointResolutionVertex_;
   //Toggle for the new quality calculation in the emulator
   bool useNewQualityCalculation_;
+  bool Iterative_;
 
   //Sorter
   class StubSorter {

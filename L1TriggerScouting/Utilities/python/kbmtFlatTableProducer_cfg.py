@@ -38,7 +38,8 @@ bmtfKalmanTrackingSettings = cms.PSet(
   initialK = cms.vdouble(-1.196,-1.581,-2.133,-2.263),
   initialK2 = cms.vdouble(-3.26e-4,-7.165e-4,2.305e-3,-5.63e-3),
 #  eLoss = cms.vdouble(-2.85e-4,-6.21e-5,-1.26e-4,-1.23e-4),
-  eLoss = cms.vdouble(+0.000765,0,0,0),
+  eLoss = cms.vdouble(+0.000765,0.00016,0.00016,0.00016),
+
 
   aPhi = cms.vdouble(1.942, .01511, .01476, .009799),
   aPhiB = cms.vdouble(-1.508,-0.1237,-0.1496,-0.1333),
@@ -78,6 +79,8 @@ bmtfKalmanTrackingSettings = cms.PSet(
   pointResolutionPhiBH = cms.vdouble(151., 173., 155., 153.),
   pointResolutionPhiBL = cms.vdouble(17866., 19306., 23984., 23746.),
   pointResolutionVertex = cms.double(1.),
+  Iterative = cms.bool(True),
+
 
   useNewQualityCalculation = cms.bool(False),
 )
@@ -130,6 +133,8 @@ bmtfKalmanTrackingOfflineSettings = cms.PSet(
   pointResolutionPhiBH = cms.vdouble(151., 173., 155., 153.),
   pointResolutionPhiBL = cms.vdouble(17866., 19306., 23984., 23746.),
   pointResolutionVertex = cms.double(1.),
+  Iterative = cms.bool(True),
+
 
   useNewQualityCalculation = cms.bool(False),
 )

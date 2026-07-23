@@ -43,7 +43,8 @@ L1TMuonBarrelKalmanAlgo::L1TMuonBarrelKalmanAlgo(const edm::ParameterSet& settin
       pointResolutionPhiBH_(settings.getParameter<std::vector<double> >("pointResolutionPhiBH")),
       pointResolutionPhiBL_(settings.getParameter<std::vector<double> >("pointResolutionPhiBL")),
       pointResolutionVertex_(settings.getParameter<double>("pointResolutionVertex")),
-      useNewQualityCalculation_(settings.getParameter<bool>("useNewQualityCalculation"))
+      useNewQualityCalculation_(settings.getParameter<bool>("useNewQualityCalculation")),
+      Iterative_(settings.getParameter<bool>("Iterative"))
 
 {}
 
@@ -325,6 +326,7 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
   unsigned int step = track.step();
 
   double eLoss = track.eLoss();
+  double beta = track.beta();
 
 
   int charge = 1;
@@ -348,6 +350,15 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
 
     if (verbose_)
       printf("propagate to vertex K=%f deltaK=%f addr=%f\n", K, deltaK, addr);
+  }
+
+  //Add eloss term when beta < 1 
+  else if (beta < 1.0){
+    double addr = KBound / 2;
+    if (addr < 0)
+      addr = (-KBound) / 2;
+    double eLossStation = eLoss_[step - 1] / (beta * beta);
+    deltaK = 2 * addr - 2 * addr / (1 + eLossStation * addr);
   }
 
   if (K >= 0)
@@ -1067,7 +1078,7 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
   double c = 0.299792;
 
   //define the radius of each station from the origin
-  const double stationRadii[4] = {4.2, 5.0, 6.0, 7.0};
+  const double stationRadii[4] = {4.3295, 5.1292, 6.1827, 7.2642};
 
 
   int stub_bxs[4] = {-99, -99, -99, -99};
@@ -1126,22 +1137,27 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1Mu
 
   std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
 
-//  return firstChain;
   if (!firstChain.first) return firstChain;
 
-  //Define the beta values for given BX spread hypothesis
-  beta = BetaEstimation(firstChain.second);
+  if (Iterative_){
 
-  if (beta == 1.) return firstChain;
+    //Define the beta values for given BX spread hypothesis
+    beta = BetaEstimation(firstChain.second);
 
-  //Define new eLoss term proportional to the original value scaled by 1/beta^2
-  double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
+    if (beta == 1.) return firstChain;
 
-  //run again the chain with the new eLoss hypostesis
-  std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
+    //Define new eLoss term proportional to the original value scaled by 1/beta^2
+    double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
 
-  //output the newly computed track
-  return secondChain;
+    //run again the chain with the new eLoss hypostesis
+    std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
+
+    //output the newly computed track
+    return secondChain;
+
+  }
+  else return firstChain;
+
 }
 
 
@@ -1422,7 +1438,7 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
 
   double FK = fabs(K);
 
-  if (FK < 8) FK = 8;
+  if (FK < 6) FK = 6;
   if (FK > 2047)
     FK = 2047.;
 

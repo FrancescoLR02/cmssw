@@ -348,11 +348,11 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   out->addColumn<float>("ptUnconstrained", ptUnconstrained, "pt without vertex constraint (physical units)");
   out->addColumn<float>("etaAtVtx", etaAtVtx, "eta re-extrapolated at vertex (physical units)");
   out->addColumn<float>("phiAtVtx", phiAtVtx, "phi re-extrapolated at vertex (physical units)");
-  out->addColumn<double>("energy loss", eLoss, "eLoss");
+  out->addColumn<double>("eLoss", eLoss, "eLoss");
   out->addColumn<float>("beta", beta, "bets");
 
   if (addStubs_) {
-    // out->addColumn<int16_t>("nStub", nStub, "number of stubs used to reconstruct KBMTF track");
+    out->addColumn<int16_t>("nStub", nStub, "number of stubs used to reconstruct KBMTF track");
     // out->addColumn<double>("s1TrackResidual", residualTrack[0], "Residual in each station");
     // out->addColumn<double>("s2TrackResidual", residualTrack[1], "Residual in each station");
     // out->addColumn<double>("s3TrackResidual", residualTrack[2], "Residual in each station");
