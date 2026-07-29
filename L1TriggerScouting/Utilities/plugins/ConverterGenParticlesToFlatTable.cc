@@ -26,6 +26,32 @@ using namespace edm;
 using namespace reco;
 using namespace std;
 
+namespace {
+  // Constants of L1TMuonBarrelKalmanAlgo::ptLUT, kept in the same form as there
+  // so that they stay in step if the calibration is ever refitted.
+  constexpr double kLSB = 1.25 / 8192.0;    // 1.25 / (1 << 13)
+  constexpr double kA = 0.8569;             // material + B-field, numerator
+  constexpr double kB = 0.1144;             // material + B-field, denominator
+  constexpr double kMisalignment = 1.23e-3 / kLSB;  // 8.0609 hw units
+
+  // Exact inverse of ptLUT: the signed vertex curvature, in hardware units,
+  // that the Kalman filter would have to produce for ptLUT to return this pt.
+  //
+  //   pt   = 1 / Fc  with  Fc = kA*F/(1 + kB*F),  F = FK*kLSB
+  //   =>   FK = 1 / ((kA*pt - kB) * kLSB)
+  //   =>   K  = charge * (FK + kMisalignment)
+  //
+  // The pole sits at pt = kB/kA = 0.1335 GeV, so anything soft has to be cut:
+  // a 0.14 GeV particle would otherwise give K ~ 1e6.  Returns 0 for neutrals
+  // and for particles too soft to be worth a curvature.
+  double curvatureFromPt(double pt, double charge) {
+    if (charge == 0.0 || pt <= 1.0)
+      return 0.0;
+    const double FK = 1.0 / ((kA * pt - kB) * kLSB);
+    return charge * (FK + kMisalignment);
+  }
+}  // namespace
+
 class ConverterGenParticlesToFlatTable : public edm::stream::EDProducer<> {
 public:
   // constructor and destructor
@@ -77,6 +103,7 @@ void ConverterGenParticlesToFlatTable::produce(edm::Event& iEvent, const edm::Ev
   std::vector<int16_t> pdgid;
   std::vector<float> beta;
   std::vector<float> mass;
+  std::vector<double> K;
 
   edm::Handle<GenParticleCollection> pruned;
   iEvent.getByToken(src_,pruned);
@@ -90,9 +117,12 @@ void ConverterGenParticlesToFlatTable::produce(edm::Event& iEvent, const edm::Ev
          eta.push_back(p.eta());
          phi.push_back(p.phi());
          beta.push_back(p.p()/p.energy());
-	 mass.push_back(p.mass());
+	        mass.push_back(p.mass());
          charge.push_back(p.charge());
          pdgid.push_back(p.pdgId());
+         
+         //Conversion factor between pt and K
+         K.push_back(curvatureFromPt(p.pt(), p.charge()));
       }
   }
   //cout<<endl;
@@ -107,6 +137,7 @@ void ConverterGenParticlesToFlatTable::produce(edm::Event& iEvent, const edm::Ev
   out->addColumn<float>("mass", mass, "mass");
   out->addColumn<int16_t>("pdgid", pdgid, "pdgid");
   out->addColumn<int16_t>("charge", charge, "charge");
+  out->addColumn<double>("K", K, "curvature");
 
   iEvent.put(std::move(out));
 }

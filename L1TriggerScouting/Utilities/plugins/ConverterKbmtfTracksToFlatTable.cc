@@ -119,11 +119,12 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
   std::vector<int16_t> charge;
   std::vector<int16_t> quality;
   std::vector<double> dxy;
-  std::vector<int16_t> curvature;
+  std::vector<double> curvature;
   std::vector<int16_t> index;
   std::vector<float> ptUnconstrained;
   std::vector<float> etaAtVtx;
   std::vector<float> phiAtVtx;
+  std::vector<double> genK;
 
   std::vector<int16_t> nStub;
 

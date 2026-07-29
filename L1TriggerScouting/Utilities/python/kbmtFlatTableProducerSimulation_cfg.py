@@ -18,12 +18,14 @@ process = cms.Process( "DUMP", run3_2024_L1T )
 
 
 process.maxEvents = cms.untracked.PSet(
-  input = cms.untracked.int32(-1) #FIXME was -1
+  input = cms.untracked.int32(10000) #FIXME was -1
 )
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
+#process.options.numberOfThreads = cms.untracked.uint32(4)
+#process.options.numberOfStreams = cms.untracked.uint32(4)
 
 process.load('L1Trigger.L1TMuon.fakeGmtParams_cff')
 
