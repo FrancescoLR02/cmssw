@@ -353,13 +353,13 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
   }
 
   //Add eloss term when beta < 1 
-  else if (beta < 1.0){
-    double addr = KBound / 2;
-    if (addr < 0)
-      addr = (-KBound) / 2;
-    double eLossStation = eLoss_[step - 1] / (beta * beta);
-    deltaK = 2 * addr - 2 * addr / (1 + eLossStation * addr);
-  }
+  // else if (beta < 1.0){
+  //   double addr = KBound / 2;
+  //   if (addr < 0)
+  //     addr = (-KBound) / 2;
+  //   double eLossStation = eLoss_[step - 1] / (beta * beta);
+  //   deltaK = 2 * addr - 2 * addr / (1 + eLossStation * addr);
+  // }
 
   if (K >= 0)
     KNew = K - deltaK;
@@ -470,11 +470,11 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
 bool L1TMuonBarrelKalmanAlgo::update(L1MuKBMTrack& track, const L1MuKBMTCombinedStubRef& stub, int mask, int seedQual) {
   updateEta(track, stub);
   if (useOfflineAlgo_) {
-    // if (mask == 3 || mask == 5 || mask == 9 || mask == 6 || mask == 10 || mask == 12)
-    //   return updateOffline(track, stub);
-    // else
-    //   return updateOffline1D(track, stub);
-    return updateOffline(track, stub);
+    if (mask == 3 || mask == 5 || mask == 9 || mask == 6 || mask == 10 || mask == 12)
+      return updateOffline(track, stub);
+    else
+      return updateOffline1D(track, stub);
+    //return updateOffline(track, stub);
 
   } else
     return updateLUT(track, stub, mask, seedQual);

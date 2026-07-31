@@ -18,14 +18,14 @@ process = cms.Process( "DUMP", run3_2024_L1T )
 
 
 process.maxEvents = cms.untracked.PSet(
-  input = cms.untracked.int32(10000) #FIXME was -1
+  input = cms.untracked.int32(-1) #FIXME was -1
 )
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
-#process.options.numberOfThreads = cms.untracked.uint32(4)
-#process.options.numberOfStreams = cms.untracked.uint32(4)
+process.options.numberOfThreads = cms.untracked.uint32(4)
+process.options.numberOfStreams = cms.untracked.uint32(4)
 
 process.load('L1Trigger.L1TMuon.fakeGmtParams_cff')
 
@@ -48,8 +48,8 @@ bmtfKalmanTrackingSettings = cms.PSet(
   lutFile = cms.string("L1Trigger/L1TMuon/data/bmtf_luts/kalmanLUTs_v302.root"),
   initialK = cms.vdouble(-1.196,-1.581,-2.133,-2.263),
   initialK2 = cms.vdouble(-3.26e-4,-7.165e-4,2.305e-3,-5.63e-3),
-#  eLoss = cms.vdouble(-2.85e-4,-6.21e-5,-1.26e-4,-1.23e-4),
-  eLoss = cms.vdouble(+0.000765,0.00016,0.00016,0.00016),
+  eLoss = cms.vdouble(+0.000765,0, 0, 0),
+  #eLoss = cms.vdouble(+0.000765,0.00016,0.00016,0.00016),
 
   aPhi = cms.vdouble(1.942, .01511, .01476, .009799),
   aPhiB = cms.vdouble(-1.508,-0.1237,-0.1496,-0.1333),
@@ -100,8 +100,9 @@ bmtfKalmanTrackingOfflineSettings = cms.PSet(
   lutFile = cms.string("L1Trigger/L1TMuon/data/bmtf_luts/kalmanLUTs_v302.root"),
   initialK = cms.vdouble(-1.196,-1.581,-2.133,-2.263),
   initialK2 = cms.vdouble(-3.26e-4,-7.165e-4,2.305e-3,-5.63e-3),
-#  eLoss = cms.vdouble(-2.85e-4,-6.21e-5,-1.26e-4,-1.23e-4),
-  eLoss = cms.vdouble(+0.000765,0,0,0),
+  eLoss = cms.vdouble(+0.000765,0, 0, 0),
+  #eLoss = cms.vdouble(+0.000765,0.00016,0.00016,0.00016),
+
 
   aPhi = cms.vdouble(1.942, .01511, .01476, .009799),
   aPhiB = cms.vdouble(-1.508,-0.1237,-0.1496,-0.1333),
@@ -140,6 +141,8 @@ bmtfKalmanTrackingOfflineSettings = cms.PSet(
   pointResolutionPhiB = cms.double(500.),
   pointResolutionPhiBH = cms.vdouble(151., 173., 155., 153.),
   pointResolutionPhiBL = cms.vdouble(17866., 19306., 23984., 23746.),
+  # pointResolutionPhiBH = cms.vdouble(15., 17., 15., 15.),
+  # pointResolutionPhiBL = cms.vdouble(1786., 1930., 2398., 2374.),
   pointResolutionVertex = cms.double(1.),
   Iterative = cms.bool(Iter),
 
