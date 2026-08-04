@@ -353,13 +353,13 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
   }
 
   //Add eloss term when beta < 1 
-  // else if (beta < 1.0){
-  //   double addr = KBound / 2;
-  //   if (addr < 0)
-  //     addr = (-KBound) / 2;
-  //   double eLossStation = eLoss_[step - 1] / (beta * beta);
-  //   deltaK = 2 * addr - 2 * addr / (1 + eLossStation * addr);
-  // }
+  else if (beta < 1.0){
+    double addr = KBound / 2;
+    if (addr < 0)
+      addr = (-KBound) / 2;
+    double eLossStation = eLoss_[step - 1] / (beta * beta);
+    deltaK = 2 * addr - 2 * addr / (1 + eLossStation * addr);
+  }
 
   if (K >= 0)
     KNew = K - deltaK;
@@ -1404,7 +1404,9 @@ int L1TMuonBarrelKalmanAlgo::fp_product(float a, int b, uint bits) {
 //as Cécile does
 // double L1TMuonBarrelKalmanAlgo::ptLUT(double oldK) {
 //   double K = oldK-8.061;
+  
 //   if (K==0) K=1;
+
 //   double lsb = 1.25 / double(1 << 13);
 //   double FK = abs(K);
 
@@ -1420,8 +1422,8 @@ int L1TMuonBarrelKalmanAlgo::fp_product(float a, int b, uint bits) {
 //   if (FK != 0)
 //     pt = double(2.0 / FK);
 
-//   if (pt > 2000)
-//     pt = 2000;
+//   if (pt > 4000)
+//     pt = 4000;
 
 //   if (pt < 8)
 //     pt = 8;
