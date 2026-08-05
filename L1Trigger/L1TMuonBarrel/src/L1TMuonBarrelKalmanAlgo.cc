@@ -342,23 +342,19 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
 
   double deltaK = 0;
   double KNew = 0;
+  double addr = KBound / 2;
+    if (addr < 0)
+      addr = (-KBound) / 2;
+
   if (step == 1) {
-    double addr = KBound / 2;
-    if (addr < 0)
-      addr = (-KBound) / 2;
+
+    // eLoss scaled only in second chain
     deltaK = 2 * addr - 2 * addr / (1 + eLoss * addr);
-
-    if (verbose_)
-      printf("propagate to vertex K=%f deltaK=%f addr=%f\n", K, deltaK, addr);
+    if (verbose_) printf("propagate to vertex K=%f deltaK=%f addr=%f\n", K, deltaK, addr);
   }
-
-  //Add eloss term when beta < 1 
-  else if (beta < 1.0){
-    double addr = KBound / 2;
-    if (addr < 0)
-      addr = (-KBound) / 2;
-    double eLossStation = eLoss_[step - 1] / (beta * beta);
-    deltaK = 2 * addr - 2 * addr / (1 + eLossStation * addr);
+  else if (beta < 1.0) {
+    const double eLossStation = eLoss_[step - 1] * (dEdx(beta) - 1.0);
+    if (eLossStation > 0.0) deltaK = 2 * addr - 2 * addr / (1 + eLossStation * addr);
   }
 
   if (K >= 0)
@@ -1071,6 +1067,21 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
 }
 
 
+//Compute the energy loss from Bethe-Bloch scaled for dp/dx
+double L1TMuonBarrelKalmanAlgo::dEdx(double beta) const{
+
+  if(beta >= 1.0) return 1.0;
+
+  if(beta < 0.15) beta = 0.15;
+
+  const double b2 = beta * beta;
+
+  //8.181 = ln(2 * m_e c^2 / I) where I = 286eV for iron
+  const double B = 8.181 + std::log(b2 / (1.0 - b2)) - b2;
+  return std::min(B/(13.5 * b2 * beta), 30.0);
+
+}
+
 
 double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
 
@@ -1128,37 +1139,26 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
 }
 
 
+std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef& seed, const L1MuKBMTCombinedStubRefVector& stubs, int bx) {
 
-std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef &seed, const L1MuKBMTCombinedStubRefVector& stubs, int bx){
+  //First chain: repdoduce KBMTF 
+  std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, eLoss_[0], 1.0);
 
-  //Start with a first pass chain
-  double starting_eLoss = eLoss_[0];
-  float beta = 1.0;
+  if (!firstChain.first || !Iterative_) return firstChain;
 
-  std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, starting_eLoss, beta);
+  //Estimate beta
+  const float beta = BetaEstimation(firstChain.second);
+  if (beta >= 0.99f) return firstChain;
 
-  if (!firstChain.first) return firstChain;
+  //Compute the energy loss based on the beta
+  const double vertexELoss = eLoss_[0] * dEdx(beta);
 
-  if (Iterative_){
+  std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, vertexELoss, beta);
 
-    //Define the beta values for given BX spread hypothesis
-    beta = BetaEstimation(firstChain.second);
-
-    if (beta == 1.) return firstChain;
-
-    //Define new eLoss term proportional to the original value scaled by 1/beta^2
-    double eLossTrueValue = (beta != 1.0) ? (1.0 / (beta * beta)) * starting_eLoss : starting_eLoss;
-
-    //run again the chain with the new eLoss hypostesis
-    std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, eLossTrueValue, beta);
-
-    //output the newly computed track
-    return secondChain;
-
-  }
-  else return firstChain;
-
+  //if the second track fails, keep the first track
+  return secondChain;
 }
+
 
 
 bool L1TMuonBarrelKalmanAlgo::estimateChiSquare(L1MuKBMTrack& track) {

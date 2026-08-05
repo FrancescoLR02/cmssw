@@ -100,8 +100,8 @@ bmtfKalmanTrackingOfflineSettings = cms.PSet(
   lutFile = cms.string("L1Trigger/L1TMuon/data/bmtf_luts/kalmanLUTs_v302.root"),
   initialK = cms.vdouble(-1.196,-1.581,-2.133,-2.263),
   initialK2 = cms.vdouble(-3.26e-4,-7.165e-4,2.305e-3,-5.63e-3),
-  eLoss = cms.vdouble(+0.000765,0, 0, 0),
-  #eLoss = cms.vdouble(+0.000765,0.00016,0.00016,0.00016),
+  #eLoss = cms.vdouble(+0.000765,0, 0, 0),
+  eLoss = cms.vdouble(+0.000765,0.00016,0.00016,0.00016),
 
 
   aPhi = cms.vdouble(1.942, .01511, .01476, .009799),

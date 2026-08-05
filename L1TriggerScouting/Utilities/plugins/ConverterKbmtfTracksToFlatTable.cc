@@ -306,7 +306,7 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
       if (track.stubs().size()<4){
         s4Station.push_back(-1);
         s4Sector.push_back(-1);
-        s4Wheel.push_back(-1);
+        s4Wheel.push_back(-99);
         s4HwQual.push_back(-1);
         s4HwPhi.push_back(-1);
         s4HwPhiB.push_back(-1);
@@ -320,7 +320,7 @@ void ConverterKbmtfTracksToFlatTable::produce(edm::Event& iEvent, const edm::Eve
       if (track.stubs().size()<3){
         s3Station.push_back(-1);
         s3Sector.push_back(-1);
-        s3Wheel.push_back(-1);
+        s3Wheel.push_back(-99);
         s3HwQual.push_back(-1);
         s3HwPhi.push_back(-1);
         s3HwPhiB.push_back(-1);
