@@ -60,6 +60,9 @@ public:
   double eLoss() const;
   float beta() const;
 
+  //Signed bx(outermost station) - bx(innermost station). Filled for every track, both signs.
+  int deltaBX() const;
+
   //Returns the entire PhiB collection
   const std::vector<double>& trackPhiBCollection() const { return trackPhiB_; }
   //returns only the specific PhiB
@@ -159,6 +162,8 @@ public:
   void seteLoss(double);
   void setBeta(float);
 
+  void setDeltaBX(int);
+
   //Set PhiB in the vector previously declared
   void setTrackPhiB(int station, double phiB);
 
@@ -227,6 +232,9 @@ private:
 
   double eLoss_ = 0.0;
   float beta_ = 1.0;
+
+  //Signed bx spread across stations
+  int deltaBX_ = 0;
 
   std::vector<double> trackPhiB_ = {-9999, -9999, -9999, -9999};
 

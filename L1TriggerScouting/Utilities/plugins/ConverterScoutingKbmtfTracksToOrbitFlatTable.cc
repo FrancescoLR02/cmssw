@@ -158,6 +158,8 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   //std::vector<double> VariancePhiB(out->size());
   std::vector<double> eLoss(out->size());
   std::vector<float> beta(out->size());
+
+  std::vector<int16_t> deltaBX(out->size());
   //std::vector<std::vector<double>> phiBTrack(4, std::vector<double>(out->size(), 0));
   //Innovation for PhiB and Phi (respectively)
   // std::vector<std::vector<double>> residualTrack(4, std::vector<double>(out->size(), 0));
@@ -204,6 +206,8 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
     //VariancePhiB[i] = track.covariance()[8];
     eLoss[i] = track.eLoss();
     beta[i] = track.beta();
+
+    deltaBX[i] = track.deltaBX();
 
     //Keep track of other information
     // const std::vector<double>& currentTrackPhiBs = track.trackPhiBCollection();
@@ -295,7 +299,8 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   // out->addColumn<int16_t>("Hit_pattern", hitPattern, "Hit Pattern");
   // out->addColumn<double>("K Variance", VarianceK, "K Variance");
   out->addColumn<double>("energy loss", eLoss, "eLoss");
-  out->addColumn<float>("beta", beta, "bets");
+  out->addColumn<float>("beta", beta, "beta estimated from the stub bx spread; 1 if no delay was seen");
+  out->addColumn<int16_t>("deltaBX", deltaBX, "signed bx(outermost station) - bx(innermost station)");
   //out->addColumn<double>("PhiB Variance", VariancePhiB, "PhiB Variance");
 
   if (addStubs_) {

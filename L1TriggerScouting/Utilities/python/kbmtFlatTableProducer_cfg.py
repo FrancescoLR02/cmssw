@@ -10,8 +10,14 @@ options = VarParsing.VarParsing ('analysis')
 
 #selbx = "Stubs3BxWindowWheelCond"
 #selbx = "DoubleMuPt0Qual8"
-#selbx = ""
-Iter = True
+selbx = ""
+
+
+# Produce the second-pass hypothesis as its own collection (L1KBMTFSlow) alongside the
+# prompt one (L1KBMTFSkimmed). Set to False to run the prompt fit only.
+# NOTE: this does NOT set "Iterative" on the base settings below - that one must stay False,
+# otherwise the base producer emits the slow track too and both tables come out identical.
+produceSlowCollection = True
 
 options.parseArguments()
 
@@ -25,8 +31,8 @@ process.maxEvents = cms.untracked.PSet(
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
-#process.options.numberOfThreads = cms.untracked.uint32(4)
-#process.options.numberOfStreams = cms.untracked.uint32(4)
+process.options.numberOfThreads = cms.untracked.uint32(6)
+process.options.numberOfStreams = cms.untracked.uint32(6)
 
 process.load('L1Trigger.L1TMuon.fakeGmtParams_cff')
 
@@ -82,7 +88,9 @@ bmtfKalmanTrackingSettings = cms.PSet(
   pointResolutionPhiBH = cms.vdouble(151., 173., 155., 153.),
   pointResolutionPhiBL = cms.vdouble(17866., 19306., 23984., 23746.),
   pointResolutionVertex = cms.double(1.),
-  Iterative = cms.bool(Iter),
+  # False -> emit the prompt (first pass) track; True -> emit the second pass (slow) track.
+  # Keep this False: the slow collection comes from the clone below, which sets it True.
+  Iterative = cms.bool(False),
 
 
   useNewQualityCalculation = cms.bool(False),
@@ -136,7 +144,9 @@ bmtfKalmanTrackingOfflineSettings = cms.PSet(
   pointResolutionPhiBH = cms.vdouble(151., 173., 155., 153.),
   pointResolutionPhiBL = cms.vdouble(17866., 19306., 23984., 23746.),
   pointResolutionVertex = cms.double(1.),
-  Iterative = cms.bool(Iter),
+  # False -> emit the prompt (first pass) track; True -> emit the second pass (slow) track.
+  # Keep this False: the slow collection comes from the clone below, which sets it True.
+  Iterative = cms.bool(False),
 
 
   useNewQualityCalculation = cms.bool(False),
@@ -168,6 +178,13 @@ process.skimMuons = cms.EDProducer("SkimmerScoutingMuonCollection",
   etamax = cms.double(0.9),
 )
 
+# Same fit, but IterativeChain emits the second-pass track. The slow refit is a different track
+# object (phi, dxy, quality and charge all move, not just pt), so it gets its own collection
+# instead of being flattened onto the prompt one.
+bmtfKalmanTrackingOfflineSettingsSlow = bmtfKalmanTrackingOfflineSettings.clone(
+  Iterative = cms.bool(True),
+)
+
 process.kbmtfEmulation = cms.EDProducer("L1TMuonBarrelScoutingKalmanTrackProducer",
   src = cms.InputTag("kbmtfConvert"),
   #bxspread = cms.int32(5), # between -5 and +5
@@ -196,11 +213,20 @@ process.kbmtfEmulation = cms.EDProducer("L1TMuonBarrelScoutingKalmanTrackProduce
 )
 
 
+process.kbmtfEmulationSlow = process.kbmtfEmulation.clone(
+  algoSettings = bmtfKalmanTrackingOfflineSettingsSlow,
+)
+
+
 process.skimKbmtf = cms.EDProducer("SkimmerScoutingKBMTFCollection",
   src = cms.InputTag("kbmtfEmulation", "L1MuKBMTrack"),
   algoSettings = bmtfKalmanTrackingSettings,
-  ptmin = cms.double(14.0), 
+  ptmin = cms.double(14.0),
   etamax = cms.double(0.9),
+)
+
+process.skimKbmtfSlow = process.skimKbmtf.clone(
+  src = cms.InputTag("kbmtfEmulationSlow", "L1MuKBMTrack"),
 )
 
 
@@ -215,9 +241,15 @@ process.scSkimmedMuonTable = cms.EDProducer("ConvertScoutingMuonsToOrbitFlatTabl
 process.scSkimmedKbmtfTable = cms.EDProducer("ConverterScoutingKbmtfTracksToOrbitFlatTable",
   src = cms.InputTag("skimKbmtf", "L1MuKBMTrackSkimmed"),
   name = cms.string("L1KBMTFSkimmed"),
-  doc = cms.string("Re-emulated KBMTF muons skimmed"),
+  doc = cms.string("Re-emulated KBMTF muons skimmed, prompt (first pass) hypothesis"),
   algoSettings = bmtfKalmanTrackingSettings,
   addStubs = cms.bool(True)
+)
+
+process.scSkimmedKbmtfSlowTable = process.scSkimmedKbmtfTable.clone(
+  src = cms.InputTag("skimKbmtfSlow", "L1MuKBMTrackSkimmed"),
+  name = cms.string("L1KBMTFSlow"),
+  doc = cms.string("Re-emulated KBMTF muons skimmed, slow (second pass) hypothesis"),
 )
 
 process.trackFilter = cms.EDFilter("TrackFilter",
@@ -227,7 +259,7 @@ process.trackFilter = cms.EDFilter("TrackFilter",
 process.nanoAOD_selection = cms.Sequence(process.trackFilter)
 
 process.p = cms.Path(
-  process.skimMuons + 
+  process.skimMuons +
   process.kbmtfConvert +
   process.kbmtfEmulation +
   process.skimKbmtf +
@@ -235,6 +267,13 @@ process.p = cms.Path(
   process.scSkimmedMuonTable +
   process.scSkimmedKbmtfTable
 )
+
+if produceSlowCollection:
+  process.p += (
+    process.kbmtfEmulationSlow +
+    process.skimKbmtfSlow +
+    process.scSkimmedKbmtfSlowTable
+  )
 
 process.out = cms.OutputModule("OrbitNanoAODOutputModule",
     fileName = cms.untracked.string(options.outputFile),

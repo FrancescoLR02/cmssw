@@ -24,7 +24,7 @@ public:
   typedef ROOT::Math::SMatrix<double, 3, 3> Matrix33;
 
   L1TMuonBarrelKalmanAlgo(const edm::ParameterSet& settings);
-  std::pair<bool, L1MuKBMTrack> chain(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, int, double, float, bool);
+  std::pair<bool, L1MuKBMTrack> chain(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, int, double, float);
   std::pair<bool, L1MuKBMTrack> IterativeChain(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, int);
 
 
@@ -36,6 +36,8 @@ public:
 private:
   bool verbose_;
   double BetaEstimation(const L1MuKBMTrack&);
+  //Signed bx(outermost hit station) - bx(innermost hit station); 0 if fewer than two stations hit
+  int deltaBX(const L1MuKBMTrack&) const;
   double dEdx(double beta) const;
   //double BetaEstimationPhiB(const L1MuKBMTrack&);
   std::pair<bool, uint> match(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, int);
@@ -148,7 +150,11 @@ private:
   double pointResolutionVertex_;
   //Toggle for the new quality calculation in the emulator
   bool useNewQualityCalculation_;
+  //Selects the hypothesis emitted: false -> prompt (first pass), true -> second pass (slow).
+  //The two collections are produced by two instances of the producer.
   bool Iterative_;
+  //Ceiling on the dE/dx scale factor applied by the second pass
+  double dEdxMax_;
 
   //Sorter
   class StubSorter {

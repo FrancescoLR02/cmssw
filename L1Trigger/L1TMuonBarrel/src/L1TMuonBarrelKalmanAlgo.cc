@@ -44,7 +44,10 @@ L1TMuonBarrelKalmanAlgo::L1TMuonBarrelKalmanAlgo(const edm::ParameterSet& settin
       pointResolutionPhiBL_(settings.getParameter<std::vector<double> >("pointResolutionPhiBL")),
       pointResolutionVertex_(settings.getParameter<double>("pointResolutionVertex")),
       useNewQualityCalculation_(settings.getParameter<bool>("useNewQualityCalculation")),
-      Iterative_(settings.getParameter<bool>("Iterative"))
+      Iterative_(settings.getParameter<bool>("Iterative")),
+      //Ceiling on the Bethe-Bloch dE/dx scale factor. Bounds how far the second pass can move the
+      //curvature: at beta=0.15 the unclamped value is ~46.
+      dEdxMax_(settings.existsAs<double>("dEdxMax") ? settings.getParameter<double>("dEdxMax") : 5.0)
 
 {}
 
@@ -848,10 +851,9 @@ void L1TMuonBarrelKalmanAlgo::setFloatingPointValues(L1MuKBMTrack& track, bool v
 
 std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombinedStubRef& seed,
                                                              const L1MuKBMTCombinedStubRefVector& stubs,
-                                                            int bx, 
-                                                            double dyn_eLoss, 
-                                                            float beta,
-                                                            bool secondPass){
+                                                            int bx,
+                                                            double dyn_eLoss,
+                                                            float beta){
 
   L1MuKBMTrackCollection pretracks;
   std::vector<int> combinatorics;
@@ -1080,8 +1082,56 @@ double L1TMuonBarrelKalmanAlgo::dEdx(double beta) const{
 
   //8.181 = ln(2 * m_e c^2 / I) where I = 286eV for iron
   const double B = 8.181 + std::log(b2 / (1.0 - b2)) - b2;
-  return std::min(B/(13.5 * b2 * beta), 5.0);
+  return std::min(B/(13.5 * b2 * beta), dEdxMax_);
 
+}
+
+
+//Locate the innermost and outermost hit stations. Returns false if fewer than two are hit.
+static bool innerOuterStations(const L1MuKBMTrack& track, int& minStation, int& maxStation, int stub_bxs[4]) {
+
+  for (int i = 0; i < 4; ++i)
+    stub_bxs[i] = -99;
+
+  //populates array without any constraint on the ordering
+  for (const auto& stub : track.stubs()) {
+      int stNum = stub->stNum() - 1;
+      if (stNum >= 0 && stNum < 4) {
+          int bxNum = stub->bxNum();
+
+          // If it's the first stub in this station, or if we want to handle multiple stubs:
+          if (stub_bxs[stNum] == -99) {
+              stub_bxs[stNum] = bxNum;
+          } else {
+              stub_bxs[stNum] = std::min(stub_bxs[stNum], bxNum);
+          }
+      }
+  }
+
+  //Find the actual minimum and maximum active stations
+  minStation = -1;
+  maxStation = -1;
+  for (int i = 0; i < 4; ++i) {
+      if (stub_bxs[i] != -99) {
+          if (minStation == -1) minStation = i;
+          maxStation = i;
+      }
+  }
+
+  return !(minStation == -1 || maxStation == -1 || minStation >= maxStation);
+}
+
+
+//Signed spread. Negative values are physically impossible for a delayed particle, so they are
+//kept as-is here: they are the control region used to estimate the noise under the positive side.
+int L1TMuonBarrelKalmanAlgo::deltaBX(const L1MuKBMTrack& track) const {
+
+  int stub_bxs[4];
+  int minStation, maxStation;
+  if (!innerOuterStations(track, minStation, maxStation, stub_bxs))
+    return 0;
+
+  return stub_bxs[maxStation] - stub_bxs[minStation];
 }
 
 
@@ -1093,34 +1143,9 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
   //define the radius of each station from the origin
   const double stationRadii[4] = {4.3295, 5.1292, 6.1827, 7.2642};
 
-
-  int stub_bxs[4] = {-99, -99, -99, -99};
-
-  //populates array without any constraint on the ordering 
-  for (const auto& stub : track.stubs()) {
-      int stNum = stub->stNum() - 1;
-      if (stNum >= 0 && stNum < 4) {
-          int bxNum = stub->bxNum();
-          
-          // If it's the first stub in this station, or if we want to handle multiple stubs:
-          if (stub_bxs[stNum] == -99) {
-              stub_bxs[stNum] = bxNum;
-          } else {
-              stub_bxs[stNum] = std::min(stub_bxs[stNum], bxNum);
-          }
-      }
-  }
-
-  //Find the actual minimum and maximum active stations
-  int minStation = -1, maxStation = -1;
-  for (int i = 0; i < 4; ++i) {
-      if (stub_bxs[i] != -99) {
-          if (minStation == -1) minStation = i; 
-          maxStation = i;                       
-      }
-  }
-
-  if (minStation == -1 || maxStation == -1 || minStation >= maxStation) {
+  int stub_bxs[4];
+  int minStation, maxStation;
+  if (!innerOuterStations(track, minStation, maxStation, stub_bxs)) {
       return 1.0;
   }
 
@@ -1143,21 +1168,35 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
 
 std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef& seed, const L1MuKBMTCombinedStubRefVector& stubs, int bx) {
 
-  //First chain: repdoduce KBMTF 
-  std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, eLoss_[0], 1.0, False);
+  //First chain: repdoduce KBMTF
+  std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, eLoss_[0], 1.0);
 
-  if (!firstChain.first || !Iterative_) return firstChain;
+  if (!firstChain.first) return firstChain;
 
-  //Estimate beta
+  //deltaBX and beta are measurements of the stubs, not corrections: they are recorded on every
+  //track whatever Iterative_ is, and for both signs, so that dBX<0 can serve as a control region
+  const int dbx = deltaBX(firstChain.second);
   const float beta = BetaEstimation(firstChain.second);
-  if (beta >= 0.99f) return firstChain;
+  firstChain.second.setDeltaBX(dbx);
+  firstChain.second.setBeta(beta);
+
+  //Iterative_ selects the hypothesis this instance emits: false -> prompt, true -> second pass.
+  //The refit is a different track object, not a rescaled pt (phi, dxy, quality and even charge
+  //move), so the two are produced as two collections by two instances of the producer.
+  if (!Iterative_ || beta >= 0.99f) return firstChain;
 
   //Compute the energy loss based on the beta
   const double vertexELoss = eLoss_[0] * dEdx(beta);
 
-  std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, vertexELoss, beta, True);
+  std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, vertexELoss, beta);
 
-  //if the second track fails, keep the first track
+  //Refit diverged: fall back to the prompt track rather than losing the seed altogether
+  if (!secondChain.first) return firstChain;
+
+  secondChain.second.setDeltaBX(dbx);
+  secondChain.second.setBeta(beta);
+  secondChain.second.seteLoss(vertexELoss);
+
   return secondChain;
 }
 
