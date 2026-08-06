@@ -850,7 +850,8 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
                                                              const L1MuKBMTCombinedStubRefVector& stubs,
                                                             int bx, 
                                                             double dyn_eLoss, 
-                                                            float beta ){
+                                                            float beta,
+                                                            bool secondPass){
 
   L1MuKBMTrackCollection pretracks;
   std::vector<int> combinatorics;
@@ -980,6 +981,7 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
           break;
         calculateEta(track);
         setFloatingPointValues(track, false);
+
         //calculate coarse eta
         //////////////////////
 
@@ -1078,7 +1080,7 @@ double L1TMuonBarrelKalmanAlgo::dEdx(double beta) const{
 
   //8.181 = ln(2 * m_e c^2 / I) where I = 286eV for iron
   const double B = 8.181 + std::log(b2 / (1.0 - b2)) - b2;
-  return std::min(B/(13.5 * b2 * beta), 30.0);
+  return std::min(B/(13.5 * b2 * beta), 5.0);
 
 }
 
@@ -1142,7 +1144,7 @@ double L1TMuonBarrelKalmanAlgo::BetaEstimation(const L1MuKBMTrack& track){
 std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1MuKBMTCombinedStubRef& seed, const L1MuKBMTCombinedStubRefVector& stubs, int bx) {
 
   //First chain: repdoduce KBMTF 
-  std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, eLoss_[0], 1.0);
+  std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, eLoss_[0], 1.0, False);
 
   if (!firstChain.first || !Iterative_) return firstChain;
 
@@ -1153,7 +1155,7 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1Mu
   //Compute the energy loss based on the beta
   const double vertexELoss = eLoss_[0] * dEdx(beta);
 
-  std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, vertexELoss, beta);
+  std::pair<bool, L1MuKBMTrack> secondChain = chain(seed, stubs, bx, vertexELoss, beta, True);
 
   //if the second track fails, keep the first track
   return secondChain;

@@ -18,7 +18,6 @@ L1MuKBMTrack::L1MuKBMTrack(const L1MuKBMTCombinedStubRef& seed, int phi, double 
       bx_(seed->bxNum()),
       rank_(seed->bxNum()) {
   stubs_.push_back(seed);
-  //!Why only 3???
   residuals_.push_back(0);
   residuals_.push_back(0);
   residuals_.push_back(0);
