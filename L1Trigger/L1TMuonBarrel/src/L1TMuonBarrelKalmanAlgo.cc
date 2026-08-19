@@ -1171,6 +1171,8 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::IterativeChain(const L1Mu
   //First chain: repdoduce KBMTF
   std::pair<bool, L1MuKBMTrack> firstChain = chain(seed, stubs, bx, eLoss_[0], 1.0);
 
+//  return firstChain;
+
   if (!firstChain.first) return firstChain;
 
   //deltaBX and beta are measurements of the stubs, not corrections: they are recorded on every
@@ -1477,11 +1479,11 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
   int charge = (K >= 0) ? +1 : -1;
   float lsb = 1.25 / float(1 << 13);
 
-  K = K - charge * (1.23e-03 / lsb);
+  //! WRONG! K = K - charge * (1.23e-03 / lsb);
 
   double FK = fabs(K);
 
-  if (FK < 8) FK = 8;
+  if (FK < 5) FK = 5;
   if (FK > 2047)
     FK = 2047.;
 
@@ -1489,6 +1491,7 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
 
   //step 1 -material and B-field
   FK = .8569 * FK / (1.0 + 0.1144 * FK);
+  //FK = FK - 1.23e-3;
   //Get to BMTF scale
   //FK = FK / 1.17;
 
@@ -1510,8 +1513,8 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
 
 //   if (FK > 2047) 
 //     FK = 2047.; 
-//   if (FK < 13)
-//     FK = 13.; 
+//   if (FK < 8)
+//     FK = 8.; 
 
 //   FK = FK * lsb;
 
