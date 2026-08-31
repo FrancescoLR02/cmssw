@@ -131,6 +131,7 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   std::vector<int16_t> charge(out->size());
   std::vector<int16_t> quality(out->size());
   std::vector<float> dxy(out->size());
+  std::vector<float> dxy_s(out->size());
   std::vector<float> curvature(out->size());
   std::vector<int16_t> index(out->size());
   std::vector<float> ptUnconstrained(out->size());
@@ -194,6 +195,7 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
     
     //equivalent to the 8 bit shift in the KF class
     dxy[i] = fabs(track.dxy()/256.0);
+    dxy_s[i] = track.dxy()/256.0;
 
     
     curvature[i] = track.curvatureAtVertex();
@@ -290,6 +292,7 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   out->addColumn<int16_t>("hwCharge", charge, "hwCharge (hw units)");
   out->addColumn<int16_t>("hwQual", quality, "hwQual (hw units)");
   out->addColumn<float>("hwDXY", dxy, "untruncated transverse impact parameter (hw units)");
+  out->addColumn<float>("hwDXY_s", dxy_s, "untruncated transverse impact parameter  signed(hw units)");
   out->addColumn<float>("hwK", curvature, "curvature (hw units)");
   out->addColumn<int16_t>("processor", index, "processor ([0-11])");
   out->addColumn<float>("ptUnconstrained", ptUnconstrained, "pt without vertex constraint (physical units)");

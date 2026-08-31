@@ -24,8 +24,8 @@ process.maxEvents = cms.untracked.PSet(
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
-process.options.numberOfThreads = cms.untracked.uint32(4)
-process.options.numberOfStreams = cms.untracked.uint32(4)
+# process.options.numberOfThreads = cms.untracked.uint32(4)
+# process.options.numberOfStreams = cms.untracked.uint32(4)
 
 process.load('L1Trigger.L1TMuon.fakeGmtParams_cff')
 

@@ -47,7 +47,7 @@ L1TMuonBarrelKalmanAlgo::L1TMuonBarrelKalmanAlgo(const edm::ParameterSet& settin
       Iterative_(settings.getParameter<bool>("Iterative")),
       //Ceiling on the Bethe-Bloch dE/dx scale factor. Bounds how far the second pass can move the
       //curvature: at beta=0.15 the unclamped value is ~46.
-      dEdxMax_(settings.existsAs<double>("dEdxMax") ? settings.getParameter<double>("dEdxMax") : 5.0)
+      dEdxMax_(settings.existsAs<double>("dEdxMax") ? settings.getParameter<double>("dEdxMax") : 25.0)
 
 {}
 
@@ -469,11 +469,11 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
 bool L1TMuonBarrelKalmanAlgo::update(L1MuKBMTrack& track, const L1MuKBMTCombinedStubRef& stub, int mask, int seedQual) {
   updateEta(track, stub);
   if (useOfflineAlgo_) {
-    if (mask == 3 || mask == 5 || mask == 9 || mask == 6 || mask == 10 || mask == 12)
-      return updateOffline(track, stub);
-    else
-      return updateOffline1D(track, stub);
-    //return updateOffline(track, stub);
+    // if (mask == 3 || mask == 5 || mask == 9 || mask == 6 || mask == 10 || mask == 12)
+    //   return updateOffline(track, stub);
+    // else
+    //   return updateOffline1D(track, stub);
+    return updateOffline(track, stub);
 
   } else
     return updateLUT(track, stub, mask, seedQual);
@@ -1232,8 +1232,8 @@ bool L1TMuonBarrelKalmanAlgo::estimateChiSquare(L1MuKBMTrack& track) {
   }
 
   //!Removed to highlight very bad tracks. Should have no effects whatsoever
-  // if (chi > 127)
-  //   chi = 127;
+  if (chi > 127)
+    chi = 127;
 
 
   // for (const auto& stub: track.stubs()) {
@@ -1479,11 +1479,9 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
   int charge = (K >= 0) ? +1 : -1;
   float lsb = 1.25 / float(1 << 13);
 
-  //! WRONG! K = K - charge * (1.23e-03 / lsb);
-
   double FK = fabs(K);
 
-  if (FK < 5) FK = 5;
+  if (FK < 7) FK = 7;
   if (FK > 2047)
     FK = 2047.;
 
@@ -1493,7 +1491,7 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
   FK = .8569 * FK / (1.0 + 0.1144 * FK);
   //FK = FK - 1.23e-3;
   //Get to BMTF scale
-  //FK = FK / 1.17;
+  FK = FK / 1.17;
 
   double pt = 0;
   if (FK != 0)
