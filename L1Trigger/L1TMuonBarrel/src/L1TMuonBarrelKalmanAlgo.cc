@@ -1481,7 +1481,7 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
 
   double FK = fabs(K);
 
-  if (FK < 7) FK = 7;
+  if (FK < 9) FK = 9;
   if (FK > 2047)
     FK = 2047.;
 
@@ -1489,7 +1489,6 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
 
   //step 1 -material and B-field
   FK = .8569 * FK / (1.0 + 0.1144 * FK);
-  //FK = FK - 1.23e-3;
   //Get to BMTF scale
   FK = FK / 1.17;
 

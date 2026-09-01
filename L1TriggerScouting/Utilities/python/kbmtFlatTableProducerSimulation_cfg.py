@@ -10,7 +10,7 @@ options = VarParsing.VarParsing ('analysis')
 selbx = "DoubleMuPt0Qual8" #FIXME
 #selbx = ""
 
-Iter = True
+Iter = False
 
 options.parseArguments()
 
