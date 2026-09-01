@@ -137,6 +137,7 @@ void ConverterScoutingKbmtfTracksToOrbitFlatTable::produce(edm::Event& iEvent, c
   std::vector<float> ptUnconstrained(out->size());
   std::vector<float> etaAtVtx(out->size());
   std::vector<float> phiAtVtx(out->size());
+  
 
   std::vector<int16_t> nStub(out->size());
   std::vector<std::vector<int16_t>> sStation(4, std::vector<int16_t>(out->size(), 0));

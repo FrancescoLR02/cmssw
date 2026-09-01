@@ -47,7 +47,7 @@ L1TMuonBarrelKalmanAlgo::L1TMuonBarrelKalmanAlgo(const edm::ParameterSet& settin
       Iterative_(settings.getParameter<bool>("Iterative")),
       //Ceiling on the Bethe-Bloch dE/dx scale factor. Bounds how far the second pass can move the
       //curvature: at beta=0.15 the unclamped value is ~46.
-      dEdxMax_(settings.existsAs<double>("dEdxMax") ? settings.getParameter<double>("dEdxMax") : 25.0)
+      dEdxMax_(settings.existsAs<double>("dEdxMax") ? settings.getParameter<double>("dEdxMax") : 5.0)
 
 {}
 
