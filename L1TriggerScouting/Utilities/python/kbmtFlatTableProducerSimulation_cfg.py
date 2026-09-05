@@ -7,8 +7,8 @@ run3_2024_L1T = cms.Modifier()
 
 options = VarParsing.VarParsing ('analysis')
 
-selbx = "DoubleMuPt0Qual8" #FIXME
-#selbx = ""
+#selbx = "DoubleMuPt0Qual8" #FIXME
+selbx = ""
 
 Iter = False
 
