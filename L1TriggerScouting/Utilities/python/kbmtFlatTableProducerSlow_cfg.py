@@ -9,8 +9,8 @@ run3_2024_L1T = cms.Modifier()
 options = VarParsing.VarParsing ('analysis')
 
 #selbx = "Stubs3BxWindowWheelCond"
-selbx = "DoubleMuPt0Qual8"
-#selbx = ""
+#selbx = "DoubleMuPt0Qual8"
+selbx = ""
 
 options.parseArguments()
 

@@ -1514,7 +1514,6 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
 //     FK = 8.; 
 
 //   FK = FK * lsb;
-
 //   //step 1 -material and B-field
 //   FK = .8569 * FK / (1.0 + 0.1144 * FK);
 //   //step 2 - misalignment
