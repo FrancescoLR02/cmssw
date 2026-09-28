@@ -152,13 +152,13 @@ bmtfKalmanTrackingOfflineSettings = cms.PSet(
   Iterative = cms.bool(Iter),
 
   #! Misalignment correction factors for the simulation
-  # kCorrPhi   = cms.vdouble(-0.6656, -0.6024, -0.3866, 0.0280, -0.2103, 1.3810, 0.9261,  0.6841,  0.3154, 0.6382,  0.9539, -0.6951),
-  # kCorrEta   = cms.vdouble(-1.5380, -0.0875, -0.0833, 0.9894, 0.8721),
-  # kCorrNStub = cms.vdouble(-0.438, 0.329, -0.109),
+  kCorrPhi   = cms.vdouble(-0.6656, -0.6024, -0.3866, 0.0280, -0.2103, 1.3810, 0.9261,  0.6841,  0.3154, 0.6382,  0.9539, -0.6951),
+  kCorrEta   = cms.vdouble(-1.5380, -0.0875, -0.0833, 0.9894, 0.8721),
+  kCorrNStub = cms.vdouble(-0.438, 0.329, -0.109),
 
-  kCorrPhi   = cms.vdouble(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-  kCorrEta   = cms.vdouble(0, 0, 0, 0, 0),
-  kCorrNStub = cms.vdouble(0, 0, 0),
+  # kCorrPhi   = cms.vdouble(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  # kCorrEta   = cms.vdouble(0, 0, 0, 0, 0),
+  # kCorrNStub = cms.vdouble(0, 0, 0),
 
 
 

@@ -1078,8 +1078,18 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
 
 
 
-//Misalignment correction on the curvature at vertex: K -> K - [dPhi(sector) + dEta(eta bin) + dNStub]
+//Misalignment correction on the curvature at vertex: K -> K - [dPhi(sector) + dEta(wheel) + dNStub]
 void L1TMuonBarrelKalmanAlgo::applyKCorrections(L1MuKBMTrack& track) {
+
+  if (kCorrPhi_.size() != 12 || kCorrEta_.size() != 5 || kCorrNStub_.size() != 3) {
+    static bool warned = false;
+    if (!warned) {
+      printf("applyKCorrections: NOT configured (sizes %zu %zu %zu), skipping\n",
+             kCorrPhi_.size(), kCorrEta_.size(), kCorrNStub_.size());
+      warned = true;
+    }
+    return;
+  }
 
   double K = track.curvatureAtVertex();
   if (fabs(K) >= 8191)
@@ -1096,6 +1106,8 @@ void L1TMuonBarrelKalmanAlgo::applyKCorrections(L1MuKBMTrack& track) {
 
   //round the total once: K is an integer in hardware
   int delta = std::lround(kCorrPhi_[sec] + kCorrEta_[iwh] + dNStub);
+
+  //printf("Corrections applied correctly");
 
   track.setCoordinatesAtVertex(K - delta, track.phiAtVertex(), track.dxy());
 }
