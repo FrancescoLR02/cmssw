@@ -86,6 +86,11 @@ bmtfKalmanTrackingSettings = cms.PSet(
   pointResolutionVertex = cms.double(1.),
   Iterative = cms.bool(Iter),
 
+  #! Misalignment correction factors for data
+  kCorrPhi   = cms.vdouble( -4.121600895927393,  15.268176696901339,  16.787513577493744, 4.406041792725551,  -8.46837104099353,  -3.180584293957883, 6.320765159884926,  16.940575782840046,  14.18659262902967, 0.4998920018405677, -13.971459858714335,  -17.433843353574677),
+  kCorrEta   = cms.vdouble(-5.214493750819151, -1.7104149649665852, 0.8090226883473493, 2.7723186296461275,  3.649231297455045),
+  kCorrNStub = cms.vdouble( -0.527, 0.287, -0.342),
+
   useNewQualityCalculation = cms.bool(False),
 )
 
@@ -140,6 +145,11 @@ bmtfKalmanTrackingOfflineSettingsSlow = cms.PSet(
   pointResolutionVertex = cms.double(1.),
   # Second pass only.
   Iterative = cms.bool(Iter),
+
+  #! Misalignment correction factors for data
+  kCorrPhi   = cms.vdouble(    -4.121600895927393,  15.268176696901339,  16.787513577493744, 4.406041792725551,  -8.46837104099353,  -3.180584293957883, 6.320765159884926,  16.940575782840046,  14.18659262902967, 0.4998920018405677, -13.971459858714335,  -17.433843353574677),
+  kCorrEta   = cms.vdouble(-5.214493750819151, -1.7104149649665852, 0.8090226883473493, 2.7723186296461275,  3.649231297455045),
+  kCorrNStub = cms.vdouble( -0.527, 0.287, -0.342),
 
 
   useNewQualityCalculation = cms.bool(False),

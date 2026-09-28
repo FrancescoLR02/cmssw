@@ -1033,8 +1033,6 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
         vertexConstraint(track);
         estimateCompatibility(track);
 
-        applyKCorrections(track);
-
         if (verbose_) {
           printf(" Coordinates after vertex constraint step:%d,phi=%d,dxy=%f,K=%f  maximum local chi2=%d\n",
                  track.step(),
@@ -1046,6 +1044,10 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
           printf("------------------------------------------------------\n");
         }
         setFloatingPointValues(track, true);
+        applyKCorrections(track);
+        //Double call
+        setFloatingPointValues(track, true);
+
         //set the coordinates at muon to include phi at station 2
         track.setCoordinatesAtMuon(track.curvatureAtMuon(), phiAtStation2, track.phiBAtMuon());
         track.setRank(rank(track));
@@ -1077,6 +1079,22 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
 }
 
 
+//Helper functions
+static int phiBin(double phi, int nbins) {
+  const double w = 2 * M_PI / nbins;
+  double x = std::fmod(phi + 0.5 * w, 2 * M_PI);
+  if (x < 0) x += 2 * M_PI;
+  int b = int(x / w);
+  return std::min(std::max(b, 0), nbins - 1);
+}
+
+static int etaBin(double eta) {
+  const int    NETA   = 5;
+  const double ETAMAX = 0.83;
+  int b = int((eta + ETAMAX) / (2 * ETAMAX) * NETA);
+  return std::min(std::max(b, 0), NETA - 1);
+}
+
 
 //Misalignment correction on the curvature at vertex: K -> K - [dPhi(sector) + dEta(wheel) + dNStub]
 void L1TMuonBarrelKalmanAlgo::applyKCorrections(L1MuKBMTrack& track) {
@@ -1093,21 +1111,16 @@ void L1TMuonBarrelKalmanAlgo::applyKCorrections(L1MuKBMTrack& track) {
 
   double K = track.curvatureAtVertex();
   if (fabs(K) >= 8191)
-    return; 
+    return;
 
-  //phi: finds the sector of the track
-  int sec = track.sector();
-  //eta: findss the wheel of the track (mapped from [-2, 2] to [0, 4])
-  int iwh = track.wheel() + 2;
+  //same binning as the offline derivation, on the same phi/eta written to the ntuple
+  int iphi = phiBin(track.phi(), 12);
+  int ieta = etaBin(track.eta());
 
-  //number of stubs
   int in = int(track.stubs().size()) - 2;
   double dNStub = (in >= 0 && in < 3) ? kCorrNStub_[in] : 0.;
 
-  //round the total once: K is an integer in hardware
-  int delta = std::lround(kCorrPhi_[sec] + kCorrEta_[iwh] + dNStub);
-
-  //printf("Corrections applied correctly");
+  double delta = kCorrPhi_[iphi] + kCorrEta_[ieta] + dNStub;
 
   track.setCoordinatesAtVertex(K - delta, track.phiAtVertex(), track.dxy());
 }

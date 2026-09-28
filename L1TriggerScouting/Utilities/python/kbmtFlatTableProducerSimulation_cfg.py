@@ -93,7 +93,7 @@ bmtfKalmanTrackingSettings = cms.PSet(
   Iterative = cms.bool(Iter),
 
   #! Misalignment correction factors for the simulation
-  kCorrPhi   = cms.vdouble(-0.6656, -0.6024, -0.3866, 0.0280, -0.2103, 1.3810, 0.9261,  0.6841,  0.3154, 0.6382,  0.9539, -0.6951),
+  kCorrPhi   = cms.vdouble(-0.6656, -0.6024, -0.3866, -0.2583, -0.2103, 1.3810, 0.9261,  0.6841,  -0.1198, 0.6382,  0.9539, -0.6951),
   kCorrEta   = cms.vdouble(-1.5380, -0.0875, -0.0833, 0.9894, 0.8721),
   kCorrNStub = cms.vdouble(-0.438, 0.329, -0.109),
 
@@ -152,7 +152,7 @@ bmtfKalmanTrackingOfflineSettings = cms.PSet(
   Iterative = cms.bool(Iter),
 
   #! Misalignment correction factors for the simulation
-  kCorrPhi   = cms.vdouble(-0.6656, -0.6024, -0.3866, 0.0280, -0.2103, 1.3810, 0.9261,  0.6841,  0.3154, 0.6382,  0.9539, -0.6951),
+  kCorrPhi   = cms.vdouble(-0.6656115789503491,  -0.6024211748377769,  -0.38664883470196904,0.02802301613413231,  -0.21031079826257004,  1.3810076416207244,0.926119139428978,  0.684088435972341,  0.3154056354069209,0.6381518398346407, 0.9539349815733138,  -0.6950778163658007),
   kCorrEta   = cms.vdouble(-1.5380, -0.0875, -0.0833, 0.9894, 0.8721),
   kCorrNStub = cms.vdouble(-0.438, 0.329, -0.109),
 
