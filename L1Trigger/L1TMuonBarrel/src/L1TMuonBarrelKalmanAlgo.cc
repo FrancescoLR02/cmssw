@@ -332,6 +332,7 @@ void L1TMuonBarrelKalmanAlgo::propagate(L1MuKBMTrack& track) {
   double beta = track.beta();
 
 
+
   int charge = 1;
   if (K != 0)
     charge = K / fabs(K);
@@ -516,6 +517,7 @@ bool L1TMuonBarrelKalmanAlgo::updateOffline(L1MuKBMTrack& track, const L1MuKBMTC
   if (!S.Invert())
     return false;
   Matrix32 Gain = cov * ROOT::Math::Transpose(H) * S;
+  
   
   
   //track.setInnovationPhiB(stub->stNum() - 1, residual[1] / 8.0);
@@ -849,11 +851,7 @@ void L1TMuonBarrelKalmanAlgo::setFloatingPointValues(L1MuKBMTrack& track, bool v
 }
 
 
-std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombinedStubRef& seed,
-                                                             const L1MuKBMTCombinedStubRefVector& stubs,
-                                                            int bx,
-                                                            double dyn_eLoss,
-                                                            float beta){
+std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombinedStubRef& seed, const L1MuKBMTCombinedStubRefVector& stubs, int bx, double dyn_eLoss, float beta){
 
   L1MuKBMTrackCollection pretracks;
   std::vector<int> combinatorics;
@@ -1029,6 +1027,9 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
 
         vertexConstraint(track);
         estimateCompatibility(track);
+
+        //!HERE 
+
         if (verbose_) {
           printf(" Coordinates after vertex constraint step:%d,phi=%d,dxy=%f,K=%f  maximum local chi2=%d\n",
                  track.step(),
@@ -1443,37 +1444,6 @@ int L1TMuonBarrelKalmanAlgo::fp_product(float a, int b, uint bits) {
   //  return long(a*(1<<bits)*b)>>bits;
   return (long((a * (1 << bits)) * b)) >> bits;
 }
-
-//as Cécile does
-// double L1TMuonBarrelKalmanAlgo::ptLUT(double oldK) {
-//   double K = oldK-8.061;
-  
-//   if (K==0) K=1;
-
-//   double lsb = 1.25 / double(1 << 13);
-//   double FK = abs(K);
-
-//   if (FK > 2047)
-//     FK = 2047.;
-
-//   FK = FK * lsb;
-
-//   //step 1 -material and B-field
-//   FK = .8569 * FK / (1.0 + 0.1144 * FK);
-
-//   double pt = 0;
-//   if (FK != 0)
-//     pt = double(2.0 / FK);
-
-//   if (pt > 4000)
-//     pt = 4000;
-
-//   if (pt < 8)
-//     pt = 8;
-
-//   return pt;
-// }
-
 //Corrected the missalignment
 double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
   int charge = (K >= 0) ? +1 : -1;
@@ -1501,35 +1471,6 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
 
   return pt;
 }
-
-
-// double L1TMuonBarrelKalmanAlgo::ptLUT(double K) { //FIXME was int
-//   int charge = (K >= 0) ? +1 : -1;
-//   float lsb = 1.25 / float(1 << 13);
-//   double FK = fabs(K);
-
-//   if (FK > 2047) 
-//     FK = 2047.; 
-//   if (FK < 8)
-//     FK = 8.; 
-
-//   FK = FK * lsb;
-//   //step 1 -material and B-field
-//   FK = .8569 * FK / (1.0 + 0.1144 * FK);
-//   //step 2 - misalignment
-//   FK = FK - charge * 1.23e-03;
-//   //Get to BMTF scale
-//   FK = FK / 1.17;
-
-//   double pt = 0;
-//   if (FK != 0)
-//     pt = 2.0 / FK;
-
-//   if (pt < 8)
-//     pt = 8;
-
-//   return pt;
-// }
 
 L1MuKBMTrackCollection L1TMuonBarrelKalmanAlgo::clean(const L1MuKBMTrackCollection& tracks, uint seed) {
   L1MuKBMTrackCollection out;
