@@ -39,6 +39,7 @@ private:
   //Signed bx(outermost hit station) - bx(innermost hit station); 0 if fewer than two stations hit
   int deltaBX(const L1MuKBMTrack&) const;
   double dEdx(double beta) const;
+  void applyKCorrections(L1MuKBMTrack& track);
   //double BetaEstimationPhiB(const L1MuKBMTrack&);
   std::pair<bool, uint> match(const L1MuKBMTCombinedStubRef&, const L1MuKBMTCombinedStubRefVector&, int);
   int correctedPhi(const L1MuKBMTCombinedStubRef&, int);
@@ -90,6 +91,7 @@ private:
   double phiAt2_;
   std::vector<double> etaLUT0_;
   std::vector<double> etaLUT1_;
+
 
   //Chi Square estimator input
   uint globalChi2Cut_;
@@ -155,6 +157,9 @@ private:
   bool Iterative_;
   //Ceiling on the dE/dx scale factor applied by the second pass
   double dEdxMax_;
+
+  //!Correction factors 
+  std::vector<double> kCorrPhi_, kCorrEta_, kCorrNStub_;
 
   //Sorter
   class StubSorter {

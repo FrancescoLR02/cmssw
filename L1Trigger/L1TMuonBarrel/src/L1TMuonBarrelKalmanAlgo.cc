@@ -47,7 +47,12 @@ L1TMuonBarrelKalmanAlgo::L1TMuonBarrelKalmanAlgo(const edm::ParameterSet& settin
       Iterative_(settings.getParameter<bool>("Iterative")),
       //Ceiling on the Bethe-Bloch dE/dx scale factor. Bounds how far the second pass can move the
       //curvature: at beta=0.15 the unclamped value is ~46.
-      dEdxMax_(settings.existsAs<double>("dEdxMax") ? settings.getParameter<double>("dEdxMax") : 5.0)
+      dEdxMax_(settings.existsAs<double>("dEdxMax") ? settings.getParameter<double>("dEdxMax") : 5.0),
+
+      //!Three correction factors for phi, eta and nStub
+      kCorrPhi_(settings.existsAs<std::vector<double> >("kCorrPhi") ? settings.getParameter<std::vector<double> >("kCorrPhi") : std::vector<double>()),
+      kCorrEta_(settings.existsAs<std::vector<double> >("kCorrEta") ? settings.getParameter<std::vector<double> >("kCorrEta") : std::vector<double>()),
+      kCorrNStub_(settings.existsAs<std::vector<double> >("kCorrNStub") ? settings.getParameter<std::vector<double> >("kCorrNStub") : std::vector<double>())
 
 {}
 
@@ -1028,7 +1033,7 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
         vertexConstraint(track);
         estimateCompatibility(track);
 
-        //!HERE 
+        applyKCorrections(track);
 
         if (verbose_) {
           printf(" Coordinates after vertex constraint step:%d,phi=%d,dxy=%f,K=%f  maximum local chi2=%d\n",
@@ -1069,6 +1074,30 @@ std::pair<bool, L1MuKBMTrack> L1TMuonBarrelKalmanAlgo::chain(const L1MuKBMTCombi
     return std::make_pair(true, cleaned[0]);
   }
   return std::make_pair(false, nullTrack);
+}
+
+
+
+//Misalignment correction on the curvature at vertex: K -> K - [dPhi(sector) + dEta(eta bin) + dNStub]
+void L1TMuonBarrelKalmanAlgo::applyKCorrections(L1MuKBMTrack& track) {
+
+  double K = track.curvatureAtVertex();
+  if (fabs(K) >= 8191)
+    return; 
+
+  //phi: finds the sector of the track
+  int sec = track.sector();
+  //eta: findss the wheel of the track (mapped from [-2, 2] to [0, 4])
+  int iwh = track.wheel() + 2;
+
+  //number of stubs
+  int in = int(track.stubs().size()) - 2;
+  double dNStub = (in >= 0 && in < 3) ? kCorrNStub_[in] : 0.;
+
+  //round the total once: K is an integer in hardware
+  int delta = std::lround(kCorrPhi_[sec] + kCorrEta_[iwh] + dNStub);
+
+  track.setCoordinatesAtVertex(K - delta, track.phiAtVertex(), track.dxy());
 }
 
 
@@ -1460,14 +1489,14 @@ double L1TMuonBarrelKalmanAlgo::ptLUT(double K) {
   //step 1 -material and B-field
   FK = .8569 * FK / (1.0 + 0.1144 * FK);
   //Get to BMTF scale
-  FK = FK / 1.17;
+  //FK = FK / 1.17;
 
   double pt = 0;
   if (FK != 0)
     pt = 2.0 / FK;
 
-  if (pt < 8)
-    pt = 8;
+  if (pt < 8) pt = 8;
+  if (pt > 2200) pt = 2200;
 
   return pt;
 }
